@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra
 TARGET = cpetrat
 SRC = cpetrat.c
-PREFIX = /
+PREFIX = /usr/local
 
 $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRC)

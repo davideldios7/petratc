@@ -6,10 +6,18 @@
 
 void save(void) {
     char path[256];
+#ifdef __APPLE__
+    snprintf(path, sizeof(path), "%s/Library/Application Support/rat", getenv("HOME"));
+#else
     snprintf(path, sizeof(path), "%s/.local/share/rat", getenv("HOME"));
+#endif 
     mkdir(path, 0755);
+#ifdef __APPLE__
+    snprintf(path, sizeof(path), "%s/Library/Application Support/rat/rat.txt", getenv("HOME"));
+#else    
+    snprintf(path, sizeof(path), "%s/.local/share/rat/rat.txt", getenv("HOME")); 
+#endif
 
-    snprintf(path, sizeof(path), "%s/.local/share/rat/rat.txt", getenv("HOME"));
     FILE *f = fopen(path, "w");
     if (!f) return;
 
@@ -21,7 +29,11 @@ void save(void) {
 
 void load(void) {
     char path[256];
+#ifdef __APPLE__
+    snprintf(path, sizeof(path), "%s/Library/Application Support/rat/rat.txt", getenv("HOME"));
+#else
     snprintf(path, sizeof(path), "%s/.local/share/rat/rat.txt", getenv("HOME"));
+#endif 
     FILE *f = fopen(path, "r");
     if (!f) {
         //first run
@@ -57,7 +69,7 @@ void setstat(){
     rat.health = decay(100.0f, newage, 0.00002f);
     
 
-    rat.age = timenow; 
+    rat.age = timenow; //while asking grok if the ifdefs for the mac path where fine he said something about time() returning a 64 int in mac but i don't know what that means so i'll ignore it 
 }
 
 void printrat(){
