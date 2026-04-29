@@ -1,0 +1,10 @@
+# take care of your little rat!
+
+# installing: 
+```term
+make && make install
+```
+
+that's pretty much it lol
+
+it saves its state to ~/.local/share/rat
