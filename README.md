@@ -2,7 +2,7 @@
 
 # installing: 
 ```term
-make && make install
+make && sudo make install
 ```
 
 that's pretty much it lol
