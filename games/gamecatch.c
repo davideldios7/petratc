@@ -3,6 +3,6 @@
 #include "../rat.h"
 void gamecatch(){
     
-    printf("67");
+    printf("67\n");
 
 }
