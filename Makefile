@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
 TARGET = petratc
-SRC = petratc.c
+SRC = petratc.c $(wildcard games/*.c)
 PREFIX = /usr/local
 
 $(TARGET): $(SRC)
