@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -lncurses
 TARGET = petratc
 SRC = petratc.c $(wildcard games/*.c)
 PREFIX = /usr/local
