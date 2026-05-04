@@ -105,6 +105,7 @@ void gamecatch(){
 
     running = 1;
     while (running) {
+        if(!running){stop();} 
         int ch = getch();
         switch (ch) {
             case 'q': case 'Q': stop(); break;
@@ -122,7 +123,7 @@ void gamecatch(){
 
 
             if (!running) break;
-        if (rand() % 10 < 2) spawndrops();
+        if (rand() % 10 < 3) spawndrops();
 
         clear();
             
