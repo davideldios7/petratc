@@ -92,7 +92,7 @@ void printrat(){
     printf("%s\n", ratart);
     int howmany = sizeof(messages) / sizeof(messages[0]);
     printf("%s\n", messages[rand() % howmany]);
-    printf("rat hunger: %.2f, rat love: %.2f, rat fun: %.2f, rat dirt: %.2f, rat health: %.2f\n",
+    printf("rat hunger: %.2f, rat love: %.2f, rat fun: %.2f, rat clean: %.2f, rat health: %.2f\n",
             rat.hunger, rat.love, rat.fun, rat.clean, rat.health);
  
 }
@@ -108,7 +108,7 @@ int truing = 1;
     printrat();
 
     while(truing){
-    printf("1: play a game! (fun up), 4: take a shower!, 9: print me!, 0: exit...\n");
+    printf("1: play a game! (fun up), 4: take a shower! (clean up), 9: print me!, 0: exit...\n");
     scanf("%d", &choice);
     switch(choice){
 
