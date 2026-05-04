@@ -14,7 +14,10 @@ printf("let's play a game, squeak!~ you gues a number between 0 and %d!\n", rang
 
 while(solved != 1){
 
-scanf("%d", &guess);
+if(scanf("%d", &guess) != 1){
+    while(getchar() != '\n');  //flush the bad input here too
+    continue;
+} 
 
 if(guess < correct){
 printf("number too low try again\n");

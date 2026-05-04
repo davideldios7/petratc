@@ -72,11 +72,9 @@ void spawndrops() {
 }
 
 void stop() {
-    if (!isendwin()) {
-        clear();
-        refresh();
-        endwin();
-    }
+    clear();
+    refresh();
+    endwin();
     if(won){addstat(&rat.clean);}
     won = 0;
     running = 0;
@@ -145,7 +143,7 @@ void gamecatch(){
                     droop[i].posx <= curs.posx + 5) {
                     droop[i].active = 0;
                     howmany++;
-                    if(howmany == 30){won = 1; running = 0;}
+                    if(howmany == 30){won = 1; running = 0; stop();}
                 }
             }
         }
