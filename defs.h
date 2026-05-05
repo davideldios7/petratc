@@ -3,5 +3,6 @@
 
 void gameguess(void);
 void gamecatch(void);
+void gamemaze(void);
 
 #endif

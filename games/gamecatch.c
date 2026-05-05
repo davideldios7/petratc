@@ -38,9 +38,9 @@
 #define height getmaxy(stdscr) 
 #define maxdrops 70
 
-int running;
-int won;
-int howmany; 
+static int running;
+static int won;
+static int howmany; 
 
 typedef struct{
 
@@ -71,7 +71,7 @@ void spawndrops() {
     }
 }
 
-void stop() {
+static void stop() {
     clear();
     refresh();
     endwin();

@@ -108,7 +108,7 @@ int truing = 1;
     printrat();
 
     while(truing){
-    printf("1: play a game! (fun up), 4: take a shower! (clean up), 9: print me!, 0: exit...\n");
+    printf("1: play a game! (fun up), 2: go down to the maze... (hunger up), 4: take a shower! (clean up), 9: print me!, 0: exit...\n");
     
     if(scanf("%d", &choice) != 1){
         while(getchar() != '\n');  //flush the bad input if you're a bad boy and put q instead of 1 
@@ -117,6 +117,7 @@ int truing = 1;
     switch(choice){
 
         case 1: gameguess(); break;
+        case 2: gamemaze(); break; 
         case 4: gamecatch(); break; 
         case 9: printrat(); break;
         case 0: truing = 0; break; 
