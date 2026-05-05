@@ -75,7 +75,7 @@ void stop() {
     clear();
     refresh();
     endwin();
-    if(won){addstat(&rat.clean);}
+    if(won){addstat(&rat.clean); printf("the rat feels cleaner...\n\n");}
     won = 0;
     running = 0;
 }
