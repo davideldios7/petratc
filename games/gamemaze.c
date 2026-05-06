@@ -47,24 +47,24 @@ static void stop() {
 static char **grid; //big ahh grid
 
 void lerw() {
-    int W = getmaxx(stdscr);
-    int H = getmaxy(stdscr);
+    int W = (width / 3);
+    int H = (height / 2);
  
     for (int y = 0; y < H; y++)
         for (int x = 0; x < W; x++)
             grid[y][x] = '#';
  
-    int cw = W / 2;
-    int ch = H / 2;
+    int cw = (W - 1) / 3; //make them 2x2 instead of 1x1
+    int ch = (H - 1) / 3;
     if (cw < 1 || ch < 1) return;
  
     int total = cw * ch;
-    char *vis = calloc(total, 1);
-    int  *px  = malloc(total * sizeof(int));
-    int  *py  = malloc(total * sizeof(int));
-    int  *ip  = malloc(total * sizeof(int));  
+    char *vis = calloc(total, 1); //visited
+    int  *px  = malloc(total * sizeof(int)); //path x
+    int  *py  = malloc(total * sizeof(int)); //path y
+    int  *ip  = malloc(total * sizeof(int)); // index of path 
     vis[0] = 1;
-    grid[1][1] = ' ';
+    grid[1][1] = grid[1][2] = grid[2][1] = grid[2][2] = ' '; //these should be open always 
     int vc = 1;
  
     int ddx[] = { 1, -1,  0,  0 };
@@ -91,7 +91,6 @@ void lerw() {
  
             int ni = ny * cw + nx;
             if (ip[ni] >= 0) {
-                //loop: erase back to ip[ni]  heh ni hehjehehe
                 int idx = ip[ni];
                 for (int i = idx + 1; i < pl; i++)
                     ip[py[i] * cw + px[i]] = -1;
@@ -103,28 +102,48 @@ void lerw() {
                 cx = nx; cy = ny;
             }
         }
- 
+
+        //each cell as 2x2
         for (int i = 0; i < pl; i++) {
-            grid[py[i]*2+1][px[i]*2+1] = ' ';
+            int gx = 3*px[i]+1, gy = 3*py[i]+1;
+            grid[gy  ][gx] = grid[gy  ][gx+1] = ' ';
+            grid[gy+1][gx] = grid[gy+1][gx+1] = ' ';
             vis[py[i]*cw+px[i]] = 1;
         }
         vc += pl;
- 
-        for (int i = 0; i + 1 < pl; i++)
-            grid[py[i]+py[i+1]+1][px[i]+px[i+1]+1] = ' ';
- 
-        if (pl > 0)
-            grid[py[pl-1]+cy+1][px[pl-1]+cx+1] = ' ';
+
+        for (int i = 0; i + 1 < pl; i++) {
+            int ax=px[i], ay=py[i], bx=px[i+1], by=py[i+1];
+            if (bx != ax) {
+                int wc = 3*(ax+bx+1)/2;
+                grid[3*ay+1][wc] = grid[3*ay+2][wc] = ' ';
+            } else {
+                int wr = 3*(ay+by+1)/2;
+                grid[wr][3*ax+1] = grid[wr][3*ax+2] = ' ';
+            }
+        }//carve 2 wide between consecutive path cells
+
+        //connect last path cell to the already visited cell
+        if (pl > 0) {
+            int ax=px[pl-1], ay=py[pl-1];
+            if (cx != ax) {
+                int wc = 3*(ax+cx+1)/2;
+                grid[3*ay+1][wc] = grid[3*ay+2][wc] = ' ';
+            } else {
+                int wr = 3*(ay+cy+1)/2;
+                grid[wr][3*ax+1] = grid[wr][3*ax+2] = ' ';
+            }
+        }
     }
  
     //entrance top, exit bottom
-    if (H > 0) grid[0][1] = ' ';
-    if (H > 1 && W > 2) grid[H-1][W-2] = ' ';
- 
+    if (H > 0) { grid[0][1] = grid[0][2] = ' '; }
+    if (H > 3 && W > 3) { grid[H-1][W-3] = grid[H-1][W-2] = ' '; } 
     free(vis); free(px); free(py); free(ip);
 }
 
 //i have no fucking idea what i did here. it was revealed to me in a dream unironically 
+//i have a slight idea of what i have done here
 
 void gamemaze(){ 
 
