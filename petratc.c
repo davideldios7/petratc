@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <ncurses.h>
+#include <string.h>
 #include <sys/stat.h>
 #include "rat.h"
 #include "defs.h"
@@ -87,45 +89,94 @@ void setstat(){
 }   
     
 
-void printrat(){
-
-    printf("%s\n", ratart);
-    int howmany = sizeof(messages) / sizeof(messages[0]);
-    printf("%s\n", messages[rand() % howmany]);
-    printf("rat hunger: %.2f, rat love: %.2f, rat fun: %.2f, rat clean: %.2f, rat health: %.2f\n",
-            rat.hunger, rat.love, rat.fun, rat.clean, rat.health);
+void printrat(WINDOW *win){
  
+    werase(win);
+    box(win, 0, 0);
+ 
+    int row = 1;
+    char artcopy[256];
+    strncpy(artcopy, ratart, sizeof(artcopy));
+    artcopy[sizeof(artcopy)-1] = '\0';
+ 
+    char *line = strtok(artcopy, "\n");
+    while(line){
+        mvwprintw(win, row++, 2, "%s", line);
+        line = strtok(NULL, "\n");
+    }
+ 
+    row++;
+    int howmany = sizeof(messages) / sizeof(messages[0]);
+    mvwprintw(win, row++, 2, "%s", messages[rand() % howmany]);
+ 
+    row++;
+    mvwprintw(win, row++, 2, "hunger: %.2f", rat.hunger);
+    mvwprintw(win, row++, 2, "love:   %.2f", rat.love);
+    mvwprintw(win, row++, 2, "fun:    %.2f", rat.fun);
+    mvwprintw(win, row++, 2, "clean:  %.2f", rat.clean);
+    mvwprintw(win, row++, 2, "health: %.2f", rat.health);
+ 
+    row++;
+    mvwprintw(win, row++, 2, "1: play a game!   (fun up)");
+    mvwprintw(win, row++, 2, "2: go to the maze (hunger up)");
+    mvwprintw(win, row++, 2, "4: take a shower! (clean up)");
+    mvwprintw(win, row++, 2, "9: print me! (refreshes stats)");
+    mvwprintw(win, row++, 2, "0: exit...");
+ 
+    wrefresh(win);
 }
-
-
+ 
+ 
 int main(){
 srand(time(NULL));
-int choice;
 int truing = 1;
-
+ 
     load();
     setstat();
-    printrat();
-
+ 
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    curs_set(0);
+ 
+    WINDOW *win = newwin(20, 40, 1, 1);
+    printrat(win);
+ 
     while(truing){
-    printf("1: play a game! (fun up), 2: go down to the maze... (hunger up), 4: take a shower! (clean up), 9: print me!, 0: exit...\n");
-    
-    if(scanf("%d", &choice) != 1){
-        while(getchar() != '\n');  //flush the bad input if you're a bad boy and put q instead of 1 
-        continue;
-    }    
-    switch(choice){
-
-        case 1: gameguess(); break;
-        case 2: gamemaze(); printf("the maze is really dark squeak...\n\n"); break; 
-        case 4: gamecatch(); printf("your rat feels cleaner!\n\n"); break; 
-        case 9: printrat(); break;
-        case 0: truing = 0; break; 
+        int choice = wgetch(win);
+ 
+        switch(choice){
+ 
+        case '1':
+            endwin();
+            gameguess();
+            refresh();
+            break;
+        case '2':
+            endwin();
+            gamemaze();
+            printf("the maze is really dark squeak...\n\n");
+            refresh();
+            break;
+        case '4':
+            endwin();
+            gamecatch();
+            printf("your rat feels cleaner!\n\n");
+            refresh();
+            break;
+        case '9': break;
+        case '0': truing = 0; break;
         }
+ 
+        if(truing) printrat(win);
     }
-
-
+ 
+    delwin(win);
+    endwin();
+ 
     save();
     printf("bye bye~~\n");
     return(0);
 }
+
