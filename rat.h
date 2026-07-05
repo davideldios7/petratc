@@ -10,7 +10,7 @@ typedef struct {
     int age;
 } Rat;
 
-extern char ratart[];
+extern char *ratart[];
 extern char *messages[];
 extern Rat rat;
 void addstat(float *guy);

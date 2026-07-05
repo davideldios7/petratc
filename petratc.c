@@ -15,8 +15,13 @@
   #define ratsave "%s/.local/share/rat/rat.txt"
 #endif
 
-  char ratart[] = 
-        "     .---.\n  (\\./)     \\.......-\n  >' '<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_";
+    char *ratart[] = { 
+        "     .---.\n  (\\./)     \\.......-\n  >' '<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_",
+        "           .---.\n-......./     (\\./)\n \"\"\"\"\"\"'.__)  >' '<\n           _\" \" ` \"",
+        "     .---.\n  (\\./)     \\.......-\n  >= =<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_",
+        "     .---.\n  (\\./)     \\.......-\n  >0 0<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_",
+        "     .---.\n  (\\./)     \\.......-\n  >^ ^<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_",
+    };
 
   char *messages[] = {
     "squeak!",
@@ -93,10 +98,11 @@ void printrat(WINDOW *win){
  
     werase(win);
     box(win, 0, 0);
- 
+
+    int ratties = (sizeof(ratart)/sizeof(ratart[0])); 
     int row = 1;
     char artcopy[256];
-    strncpy(artcopy, ratart, sizeof(artcopy));
+    strncpy(artcopy, ratart[rand() % ratties], sizeof(artcopy));
     artcopy[sizeof(artcopy)-1] = '\0';
  
     char *line = strtok(artcopy, "\n");
