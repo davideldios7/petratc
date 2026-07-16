@@ -4,5 +4,6 @@
 void gameguess(void);
 void gamecatch(void);
 void gamemaze(void);
+void gameclicker(void);
 
 #endif

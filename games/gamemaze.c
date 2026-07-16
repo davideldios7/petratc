@@ -248,13 +248,25 @@ void gamemaze(){
             case 'q': case 'Q': stop(); break;
             case 'r': case 'R': properrestart(&curs, &W, &H); break;
             case 'a': case 'A': case KEY_LEFT:
-                if (!iswall(curs.posy, curs.posx - 1)) curs.posx -= 1; break;
+                if(!iswall(curs.posy, curs.posx - 1)){
+                    curs.posx -= 1; 
+                }
+                    break;
             case 'd': case 'D': case KEY_RIGHT:
-                if (!iswall(curs.posy, curs.posx + 1))curs.posx += 1; break;
+                if (!iswall(curs.posy, curs.posx + 1)){
+                    curs.posx += 1;
+                }
+                    break;
             case 'w': case 'W': case KEY_UP:
-                if (!iswall(curs.posy - 1, curs.posx))curs.posy -= 1; break; 
+                if (!iswall(curs.posy - 1, curs.posx)){
+                    curs.posy -= 1;
+                }
+                    break; 
             case 's': case 'S': case KEY_DOWN:
-                if (!iswall(curs.posy + 1, curs.posx))curs.posy += 1; break; 
+                if (!iswall(curs.posy + 1, curs.posx)){
+                    curs.posy += 1;
+                }
+                    break; 
         }
         
         eatcheese(&curs);

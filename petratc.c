@@ -69,8 +69,12 @@ void load(void) {
         rat.age    = time(NULL);
         return;
     }
-    fscanf(f, "%f\n%f\n%f\n%f\n%f\n%d\n",
-        &rat.hunger, &rat.love, &rat.fun, &rat.clean, &rat.health, &rat.age);
+    if(fscanf(f, "%f\n%f\n%f\n%f\n%f\n%d\n", 
+           &rat.hunger, &rat.love, &rat.fun, &rat.clean, &rat.health, &rat.age) != 6){
+    fprintf(stderr, "error: failed to initialize save data.\n");
+    }    
+    //this should shut the compiler up 
+
     fclose(f);
 }
 
@@ -91,6 +95,7 @@ void setstat(){
     
 
     rat.age = timenow; //thinking about this makes my cortisol spike so i'll just ignore it even more
+                       //nah nvm this will only give us problems in 2038 
 }   
     
 
@@ -126,6 +131,7 @@ void printrat(WINDOW *win){
     mvwprintw(win, row++, 2, "1: play a game!   (fun up)");
     mvwprintw(win, row++, 2, "2: go to the maze (hunger up)");
     mvwprintw(win, row++, 2, "4: take a shower! (clean up)");
+    mvwprintw(win, row++, 2, "5: clicker the cheese! (all up)");
     mvwprintw(win, row++, 2, "9: print me! (refreshes stats)");
     mvwprintw(win, row++, 2, "0: exit...");
  
@@ -146,7 +152,7 @@ int truing = 1;
     keypad(stdscr, TRUE);
     curs_set(0);
  
-    WINDOW *win = newwin(20, 40, 1, 1);
+    WINDOW *win = newwin(25, 45, 1, 1);
     printrat(win);
  
     while(truing){
@@ -169,6 +175,11 @@ int truing = 1;
             endwin();
             gamecatch();
             printf("your rat feels cleaner!\n\n");
+            refresh();
+            break;
+        case '5':
+            endwin();
+            gameclicker();
             refresh();
             break;
         case '9': break;
