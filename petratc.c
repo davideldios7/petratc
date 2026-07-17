@@ -78,26 +78,25 @@ void load(void) {
     fclose(f);
 }
 
-float decay(float current, int timepassed, float rate) {
-    float result = current - (timepassed * rate);
+float decay(float current, float dayspassed, float rate) {
+    float result = current - (dayspassed * rate);
     return result < 0.0f ? 0.0f : result;
 }
 
 void setstat(){
     int timenow = time(NULL);
-    int newage = timenow - rat.age;  
+    int newage = timenow - rat.age;
+    float days = newage / 86400.0f; //one day 
 
-    rat.hunger = decay(rat.hunger, newage, 0.0008f); //should be like 30 hours now
-    rat.love   = decay(rat.love, newage, 0.00035f); //80 hours
-    rat.fun    = decay(rat.fun, newage, 0.0006f); //short like 25
-    rat.clean  = decay(rat.clean, newage, 0.0009f); //around 35  or 40 hours
-    rat.health = decay(rat.health, newage, 0.00008f); //like 2 weeks
-    
+    rat.hunger = decay(rat.hunger, days, 50.0f); //hungry beast
+    rat.love   = decay(rat.love,   days, 1.1f); //rats love you they won't hate you easly 
+    rat.fun    = decay(rat.fun,    days, 25.0f);  
+    rat.clean  = decay(rat.clean,  days, 5.0f);//rats are surprisingly clean they clean themselves so slow  
+    rat.health = decay(rat.health, days, 0.6f);  
 
-    rat.age = timenow; //thinking about this makes my cortisol spike so i'll just ignore it even more
-                       //nah nvm this will only give us problems in 2038 
-}   
-    
+    rat.age = timenow;
+}  
+//this is better yeah
 
 void printrat(WINDOW *win){
  
