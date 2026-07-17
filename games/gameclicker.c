@@ -57,5 +57,4 @@ void gameclicker(){
     }
 
 stop();
-printf("yeah");
 }

@@ -128,7 +128,7 @@ void printrat(WINDOW *win){
     mvwprintw(win, row++, 2, "health: %.2f", rat.health);
  
     row++;
-    mvwprintw(win, row++, 2, "1: play a game!   (fun up)");
+    mvwprintw(win, row++, 2, "1: play guess the number! (fun up)");
     mvwprintw(win, row++, 2, "2: go to the maze (hunger up)");
     mvwprintw(win, row++, 2, "4: take a shower! (clean up)");
     mvwprintw(win, row++, 2, "5: clicker the cheese! (all up)");
@@ -168,13 +168,13 @@ int truing = 1;
         case '2':
             endwin();
             gamemaze();
-            printf("the maze is really dark squeak...\n\n");
+            //printf("the maze is really dark squeak...\n\n");
             refresh();
             break;
         case '4':
             endwin();
             gamecatch();
-            printf("your rat feels cleaner!\n\n");
+            //printf("your rat feels cleaner!\n\n");
             refresh();
             break;
         case '5':
@@ -185,7 +185,7 @@ int truing = 1;
         case '9': break;
         case '0': truing = 0; break;
         }
- 
+// i will put those printfs where the squeaks go but i have no clue how to do that today  
         if(truing) printrat(win);
     }
  
