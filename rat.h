@@ -15,4 +15,10 @@ extern char *messages[];
 extern Rat rat;
 void addstat(float *guy);
 
+
+void gameguess(void);
+void gamecatch(void);
+void gamemaze(void);
+void gameclicker(void);
+
 #endif

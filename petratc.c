@@ -5,7 +5,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include "rat.h"
-#include "defs.h"
 
 #ifdef __APPLE__
   #define ratpath  "%s/Library/Application Support/rat"
@@ -31,6 +30,12 @@
     "SQUEAK",
     "SQUEAK!!",
     "SQUEAAAKKKKK",
+    };
+
+    char *funfact[] = {
+        "press q to exit games !",
+        "rats love cheese!",
+        "i am sleepy.."
     };
 
 void addstat(float *guy){
@@ -117,6 +122,7 @@ void printrat(WINDOW *win){
  
     row++;
     int howmany = sizeof(messages) / sizeof(messages[0]);
+    int facts = sizeof(funfact) / sizeof(funfact[0]);
     mvwprintw(win, row++, 2, "%s", messages[rand() % howmany]);
  
     row++;
@@ -133,6 +139,7 @@ void printrat(WINDOW *win){
     mvwprintw(win, row++, 2, "5: clicker the cheese! (all up)");
     mvwprintw(win, row++, 2, "9: print me! (refreshes stats)");
     mvwprintw(win, row++, 2, "0: exit...");
+    mvwprintw(win, row++ +1, 1, "fun fact: %s", funfact[rand() % facts]);
  
     wrefresh(win);
 }
