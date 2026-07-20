@@ -1,15 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
 #include <time.h>
 #include <unistd.h>
 #include <ncurses.h>
 #include "../rat.h"
 
+/*
+i lowkey stole the art of the little rat and the cheese from the internet lol
+https://asciiart.website/art/752
+*/
+
 #define width getmaxx(stdscr)
 #define height getmaxy(stdscr)
 
 int running;
-int row = 1; 
 
 static void stop() {
     clear();
@@ -17,6 +23,11 @@ static void stop() {
     endwin();
     running = 0; 
 }
+
+static char *cheeseart = {
+" ()()         ____\n (..)        /|o  |\n /\\/\\       /o|  o|\nc\\db/o...  /o_|_o_|"
+};
+//i hate this 
 
 /*
     //i need to make a system based on intergers to represent non-int numbers like 0.5 or  five trillion as 5T instead of 500000000000 or whatever  
@@ -63,11 +74,11 @@ static bignum normalize(double regnum){
     double val = regnum;
     int y = 0;
 
-    while (abs((int)val) >= 1000) {
+    while (fabs(val) >= 1000) {
         val /= 1000.0;
         y++;
     }
-    while (val != 0.0 && abs((int)val) < 1) {
+    while (val != 0.0 && fabs(val) < 1) {
         val *= 1000.0;
         y--;
     }
@@ -77,35 +88,211 @@ static bignum normalize(double regnum){
     return b;
 }
 
-static double weirderize(bignum a){
-    double result = a.x;
-    int y = a.y;
-    while (y > 0) { result *= 1000.0; y--; }
-    while (y < 0) { result /= 1000.0; y++; }
-    return result;
+static bignum normalizebignum(bignum b){
+    double val = b.x;
+    int y = b.y;
+ 
+    while (fabs(val) >= 1000) {
+        val /= 1000.0;
+        y++;
+    }
+    while (val != 0.0 && fabs(val) < 1) {
+        val *= 1000.0;
+        y--;
+    }
+ 
+    b.x = val;
+    b.y = y;
+    return b;
 }
-
+ 
 static bignum addbignum(bignum a, bignum b){
-    return normalize(weirderize(a) + weirderize(b));
+    bignum result;
+    if(a.y == b.y){
+        result.x = a.x + b.x;
+        result.y = a.y;
+    } else if(a.y > b.y){
+        double bx = b.x;
+        for(int i = a.y - b.y; i > 0; i--) bx /= 1000.0;
+        result.x = a.x + bx;
+        result.y = a.y;
+    } else {
+        double ax = a.x;
+        for(int i = b.y - a.y; i > 0; i--) ax /= 1000.0;
+        result.x = ax + b.x;
+        result.y = b.y;
+    }
+    return normalizebignum(result);
 }
-
+ 
 static bignum subbignum(bignum a, bignum b){
-    return normalize(weirderize(a) - weirderize(b));
+    bignum result;
+    if(a.y == b.y){
+        result.x = a.x - b.x;
+        result.y = a.y;
+    } else if(a.y > b.y){
+        double bx = b.x;
+        for(int i = a.y - b.y; i > 0; i--) bx /= 1000.0;
+        result.x = a.x - bx;
+        result.y = a.y;
+    } else {
+        double ax = a.x;
+        for(int i = b.y - a.y; i > 0; i--) ax /= 1000.0;
+        result.x = ax - b.x;
+        result.y = b.y;
+    }
+    return normalizebignum(result);
 }
-
+ 
 static bignum mulbignum(bignum a, bignum b){
-    return normalize(weirderize(a) * weirderize(b));
+    bignum result;
+    result.x = a.x * b.x;
+    result.y = a.y + b.y;
+    return normalizebignum(result);
+}
+ 
+static bignum divbignum(bignum a, bignum b){
+    bignum result;
+    result.x = a.x / b.x;
+    result.y = a.y - b.y;
+    return normalizebignum(result);
+}
+ 
+static bignum addmixregbig(bignum a, double regnum){
+    return addbignum(a, normalize(regnum));
+}
+ 
+static bignum submixregbig(bignum a, double regnum){
+    return subbignum(a, normalize(regnum));
+}
+ 
+static bignum mulmixregbig(bignum a, double regnum){
+    return mulbignum(a, normalize(regnum));
+}
+ 
+static bignum divmixregbig(bignum a, double regnum){
+    return divbignum(a, normalize(regnum));
 }
 
-static bignum divbignum(bignum a, bignum b){
-    return normalize(weirderize(a) / weirderize(b));
+static char *bignumprint(bignum b) {
+    //32 bytes is more than enough for 124.24 trillion idk
+    char *nice = malloc(32 * sizeof(char)); 
+    if(nice == NULL) return NULL;
+
+    if(b.y >= 0 && b.y < 12) {
+        snprintf(nice, 32, "%.2lf%s", b.x, digit[b.y]);
+    } else{
+        snprintf(nice, 32, "%.2lfe3*%d", b.x, b.y);
+    }
+    return nice; 
+}
+
+
+static int wrapprint(WINDOW *win, int row, int col, int maxwidth, const char *msg){
+
+    char copy[256];
+    strncpy(copy, msg, sizeof(copy));
+    copy[sizeof(copy)-1] = '\0';
+
+    char line[256] = "";
+    char *word = strtok(copy, " ");
+    while(word){
+        int linelen = strlen(line);
+        int wordlen = strlen(word);
+        int extra = (linelen > 0) ? 1 : 0;
+        if(linelen + extra + wordlen > maxwidth){
+            mvwprintw(win, row++, col, "%s", line);
+            line[0] = '\0';
+            linelen = 0;
+            extra = 0;
+        }
+
+        if(linelen > 0) strcat(line, " ");
+        strcat(line, word);
+
+        word = strtok(NULL, " ");
+    }
+    if(strlen(line) > 0){
+        mvwprintw(win, row++, col, "%s", line);
+    }
+
+    return row;
+}
+
+//wide = art and score side by side
+//narrow = art on topand score below
+typedef enum { layoutnarrow, layoutwide } layoutmode;
+
+//bounding box of the drawn cheese art in winlocal coordinates for click detection
+static int artrow0, artcol0, artrows, artcols;
+
+static layoutmode getlayout(WINDOW *win){
+    return (getmaxx(win) >= getmaxy(win) * 2) ? layoutwide : layoutnarrow;
+}
+
+static void drawwin(WINDOW *win, bignum cheeses){
+
+    werase(win);
+    box(win, 0, 0);
+
+    int winw = getmaxx(win);
+    layoutmode mode = getlayout(win);
+
+    char artcopy[2048];
+    strncpy(artcopy, cheeseart, sizeof(artcopy));
+    artcopy[sizeof(artcopy)-1] = '\0';
+
+    int artcol = 2;
+    int artrow = 1;
+    int scorecol, scorewrapw;
+
+    if(mode == layoutwide){
+        scorecol = winw / 2 + 2;
+        scorewrapw = winw - scorecol - 2;
+    } else {
+        scorecol = 2;
+        scorewrapw = winw - 4;
+    }
+
+    int row = artrow;
+    int widest = 0;
+    char *line = strtok(artcopy, "\n");
+    while(line){
+        mvwprintw(win, row, artcol, "%s", line);
+        int len = strlen(line);
+        if(len > widest) widest = len;
+        row++;
+        line = strtok(NULL, "\n");
+    }
+
+    //save where the art landed so the click handler knows what to hit-test against
+    artrow0 = artrow;
+    artcol0 = artcol;
+    artrows = row - artrow;
+    artcols = widest;
+
+    char *scorestr = bignumprint(cheeses);
+    char scoremsg[64];
+    snprintf(scoremsg, sizeof(scoremsg), "cheese: %s", scorestr);
+    free(scorestr);
+
+    if(mode == layoutwide){
+        mvwprintw(win, 1, scorecol, "%s", scoremsg);
+        wrapprint(win, 3, scorecol, scorewrapw, "click the cheese!");
+    } else {
+        int scorerow = artrow0 + artrows + 1;
+        wrapprint(win, scorerow, scorecol, scorewrapw, scoremsg);
+        wrapprint(win, scorerow+1, scorecol, scorewrapw, "click the cheese!");
+    }
+
+    wrefresh(win);
 }
 
 void gameclicker(){
 
     srand(time(NULL));
         static int initialized = 0;
-        if(!initialized){ initscr();}else{refresh();}
+        if(!initialized){ initscr();}else{refresh();}  // the way i wrote this reminds me of :(){ :|:& };:
         ++initialized;
 
     noecho();
@@ -113,33 +300,55 @@ void gameclicker(){
     nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
     curs_set(0);
+    mousemask(BUTTON1_PRESSED, NULL);
+    
+    mouseinterval(0); //don't wait to resolve single vs double click
 
     int winh = height * 0.97;
     int winw = width * 0.97;
     int boxy = (height - winh) / 2;
     int boxx = (width - winw) / 2;
     WINDOW *win = newwin(winh, winw, boxy, boxx);
-   
-    box(win, 0, 0); //box? 
 
     //should i wrap all this into a macro in rat.h to not have to write all of this every time i make a new game?
-    //or just a function in something like rat.c yeah 
-    
+    //or just a function in something like rat.c yeah
+
     running = 1;
 
-    bignum cheeses;
+    bignum cheeses = {0.0, 0};
+    bignum onecheese = {1.0, 0}; //what a single click is worth
 
-    mvwprintw(win, row ++, 4, "hi"); 
+    drawwin(win, cheeses);
+
     while(running){
-        if(!running){stop();}
-        int ch = getch();     
-        
-        switch (ch) {
-            case 'q': case 'Q': stop(); break;
+        if(!running){stop(); break;}
+
+        int ch;
+        while((ch = getch()) != ERR){ //drain the whole queue each frame so rapid clicks/keys aren't ignroed 
+            switch (ch) {
+                case 'q': case 'Q': stop(); break;
+                case 'a': cheeses = addmixregbig(cheeses, 50.0); break;
+                case 'b': cheeses = mulmixregbig(cheeses, 235.2); break;
+                case KEY_MOUSE: {
+                    MEVENT event;
+                    if(getmouse(&event) == OK && (event.bstate & BUTTON1_PRESSED)){
+                        int y = event.y, x = event.x;
+                        //translate the screen click into winlocal coordinates
+                        if(wmouse_trafo(win, &y, &x, FALSE)){
+                            if (y >= artrow0 && y < artrow0 + artrows &&
+                               x >= artcol0 && x < artcol0 + artcols){
+                                cheeses = addbignum(cheeses, onecheese);
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+            if(!running) break;
         }
 
-    
-        wrefresh(win);
+        if(running) drawwin(win, cheeses);
+
         usleep(16667); //60 fps according to google ai overview lmao
     }
 
