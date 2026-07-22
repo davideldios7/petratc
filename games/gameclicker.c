@@ -12,9 +12,6 @@ i lowkey stole the art of the little rat and the cheese from the internet lol
 https://asciiart.website/art/752
 */
 
-#define width getmaxx(stdscr)
-#define height getmaxy(stdscr)
-
 int running;
 
 static void stop() {
@@ -188,37 +185,6 @@ static char *bignumprint(bignum b) {
 }
 
 
-static int wrapprint(WINDOW *win, int row, int col, int maxwidth, const char *msg){
-
-    char copy[256];
-    strncpy(copy, msg, sizeof(copy));
-    copy[sizeof(copy)-1] = '\0';
-
-    char line[256] = "";
-    char *word = strtok(copy, " ");
-    while(word){
-        int linelen = strlen(line);
-        int wordlen = strlen(word);
-        int extra = (linelen > 0) ? 1 : 0;
-        if(linelen + extra + wordlen > maxwidth){
-            mvwprintw(win, row++, col, "%s", line);
-            line[0] = '\0';
-            linelen = 0;
-            extra = 0;
-        }
-
-        if(linelen > 0) strcat(line, " ");
-        strcat(line, word);
-
-        word = strtok(NULL, " ");
-    }
-    if(strlen(line) > 0){
-        mvwprintw(win, row++, col, "%s", line);
-    }
-
-    return row;
-}
-
 //wide = art and score side by side
 //narrow = art on topand score below
 typedef enum { layoutnarrow, layoutwide } layoutmode;
@@ -291,27 +257,10 @@ static void drawwin(WINDOW *win, bignum cheeses){
 void gameclicker(){
 
     srand(time(NULL));
-        static int initialized = 0;
-        if(!initialized){ initscr();}else{refresh();}  // the way i wrote this reminds me of :(){ :|:& };:
-        ++initialized;
 
-    noecho();
-    cbreak();
-    nodelay(stdscr, TRUE);
-    keypad(stdscr, TRUE);
-    curs_set(0);
+    WINDOW *win = ratdrawbox();
     mousemask(BUTTON1_PRESSED, NULL);
-    
     mouseinterval(0); //don't wait to resolve single vs double click
-
-    int winh = height * 0.97;
-    int winw = width * 0.97;
-    int boxy = (height - winh) / 2;
-    int boxx = (width - winw) / 2;
-    WINDOW *win = newwin(winh, winw, boxy, boxx);
-
-    //should i wrap all this into a macro in rat.h to not have to write all of this every time i make a new game?
-    //or just a function in something like rat.c yeah
 
     running = 1;
 

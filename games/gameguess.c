@@ -5,40 +5,7 @@
 #include <ncurses.h>
 #include "../rat.h"
 
-#define boxw 45
-#define boxh 25
 #define maxhistory 4
-
-static int wrapprint(WINDOW *win, int row, int col, int maxwidth, const char *msg){
-
-    char copy[256];
-    strncpy(copy, msg, sizeof(copy));
-    copy[sizeof(copy)-1] = '\0';
-
-    char line[256] = "";
-    char *word = strtok(copy, " ");
-    while(word){
-        int linelen = strlen(line);
-        int wordlen = strlen(word);
-        int extra = (linelen > 0) ? 1 : 0; 
-        if(linelen + extra + wordlen > maxwidth){
-            mvwprintw(win, row++, col, "%s", line);
-            line[0] = '\0';
-            linelen = 0;
-            extra = 0;
-        }
-
-        if(linelen > 0) strcat(line, " ");
-        strcat(line, word);
-
-        word = strtok(NULL, " ");
-    }
-    if(strlen(line) > 0){
-        mvwprintw(win, row++, col, "%s", line);
-    }
-
-    return row;
-}
 
 static void drawwin(WINDOW *win, int artpick, const char *msg, int history[], int histcount){
 
@@ -57,9 +24,9 @@ static void drawwin(WINDOW *win, int artpick, const char *msg, int history[], in
     }
 
     row++;
-    wrapprint(win, row, 2, boxw - 4, msg);
+    wrapprint(win, row, 2, getmaxx(win) - 4, msg);
 
-    int inputrow = boxh - 3;
+    int inputrow = getmaxy(win) - 3;
 
 
     for(int i = 0; i < histcount; i++){
@@ -80,15 +47,7 @@ void gameguess(){
     int history[maxhistory];
     int histcount = 0;
 
-    static int initialized = 0;
-    if(initialized == 0){ initscr(); }else{ refresh(); }
-    ++initialized;
-
-    noecho();
-    cbreak();
-    curs_set(0);
-
-    WINDOW *win = newwin(boxh, boxw, 1, 1);
+    WINDOW *win = ratdrawbox();
 
     char msg[96];
     snprintf(msg, sizeof(msg), "let's play a game, squeak!~ you gues a number between 0 and %d!", range);
@@ -100,7 +59,7 @@ void gameguess(){
 
         echo();
         char buf[16];
-        mvwgetnstr(win, boxh - 3, 2, buf, sizeof(buf) - 1);
+        mvwgetnstr(win, getmaxy(win) - 3, 2, buf, sizeof(buf) - 1);
         noecho();
 
         if((buf[0] == 'q' || buf[0] == 'Q') && buf[1] == '\0'){
@@ -108,10 +67,10 @@ void gameguess(){
 
             echo();
             char confirm[16];
-            mvwgetnstr(win, boxh - 3, 2, confirm, sizeof(confirm) - 1);
+            mvwgetnstr(win, getmaxy(win) - 3, 2, confirm, sizeof(confirm) - 1);
             noecho();
 
-            if((confirm[0] == 'q' || confirm[0] == 'Q' || confirm[0] == 'y' || confirm[0] == 'Y') && confirm[1] == '\0'){
+            if((confirm[0] == 'q' || confirm[0] == 'Q' || confirm[0] == 'y' || confirm[0] == 'Y')){
                 quitgame = 1;
                 break;
             } else if((confirm[0] == 'n' || confirm[0] == 'N') && confirm[1] == '\0'){

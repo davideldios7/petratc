@@ -17,12 +17,12 @@
 // you start at the top and end at the bottom if i ever wanna automate taking care of the rat
 */
 
-#define width getmaxx(stdscr)
-#define height getmaxy(stdscr)
-
 static int running;
 static int won;
 static int found; 
+static int width;
+static int height;
+static WINDOW *win; 
 
 typedef struct{
 
@@ -197,8 +197,10 @@ static void properrestart(cursor *curs, int *W, int *H) {
     for (int y = 0; y < *H; y++) free(grid[y]);
     free(grid);
 
-    *W = getmaxx(stdscr);
-    *H = getmaxy(stdscr);
+    width = getmaxx(win) - 2;
+    height = getmaxy(win) - 2;
+    *W = width;
+    *H = height;
 
     grid = malloc(*H * sizeof(char *));
     for (int y = 0; y < *H; y++)
@@ -215,12 +217,13 @@ static void properrestart(cursor *curs, int *W, int *H) {
 void gamemaze(){ 
 
     srand(time(NULL));
-        static int initialized = 0;
-        if(initialized == 0){ initscr();}else{refresh();}
-        ++initialized;
 
-    int W = getmaxx(stdscr);
-    int H = getmaxy(stdscr);
+    win = ratdrawbox();
+    width = getmaxx(win) - 2;
+    height = getmaxy(win) - 2;
+
+    int W = width;
+    int H = height;
 
     grid = malloc(H * sizeof(char *)); //those who allocate memory 
     for (int y = 0; y < H; y++)
@@ -230,12 +233,6 @@ void gamemaze(){
     spawncheeses();
 
     found = 0; 
-
-    noecho();
-    cbreak();
-    nodelay(stdscr, TRUE);
-    keypad(stdscr, TRUE);
-    curs_set(0);
 
     cursor curs = {1, 1, {"@"}};
 
@@ -273,20 +270,21 @@ void gamemaze(){
         checkexit(&curs);
 
         if (!running) break;
-        clear();
+        werase(win);
+        box(win, 0, 0);
 
-        mvprintw(0, width/3+1, "move around the maze and find food!"); 
-        mvprintw(1, width/3+1, "you've collected %d/5 cheeses", found); 
-        mvprintw(2, width/3+1, "(only if you find food your rat will be less hungry)"); 
-        mvprintw(height/1.5-2, width/3+1, "btw sometimes the maze is impossible just press R");
-        mvprintw(height/1.5-1, width/3+1, "if that's the case");
+        mvwprintw(win, 1, width/3+2, "move around the maze and find food!"); 
+        mvwprintw(win, 2, width/3+2, "you've collected %d/5 cheeses", found); 
+        mvwprintw(win, 3, width/3+2, "(only if you find food your rat will be less hungry)"); 
+        mvwprintw(win, height/1.5-2+1, width/3+2, "btw sometimes the maze is impossible just press R");
+        mvwprintw(win, height/1.5-1+1, width/3+2, "if that's the case");
 
         for (int y = 0; y < H; y++)
         for (int x = 0; x < W; x++){
-        if (grid[y][x] == '#') mvaddch(y, x, '#');
+        if (grid[y][x] == '#') mvwaddch(win, y+1, x+1, '#');
         else if (grid[y][x] == 'O') {
             int dist = abs(y - curs.posy) + abs(x - curs.posx);
-            if (dist <= 5) mvaddch(y, x, 'O');
+            if (dist <= 5) mvwaddch(win, y+1, x+1, 'O');
             }
         }
 
@@ -294,11 +292,11 @@ void gamemaze(){
         int hmsg = ((height/2) - 1) / 2;
         int msgw = 3 * wmsg + 1;
         int msgh = 3 * hmsg + 1;        
-        mvprintw(msgh, msgw-2, "^ leave through here");
+        mvwprintw(win, msgh+1, msgw-2+1, "^ leave through here");
 
-        mvaddstr(curs.posy, curs.posx, curs.face[0]);
+        mvwaddstr(win, curs.posy+1, curs.posx+1, curs.face[0]);
 
-        refresh();
+        wrefresh(win);
         usleep(50000);
     }
 

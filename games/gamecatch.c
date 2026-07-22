@@ -34,13 +34,13 @@
     // i just realized this is basically cmatrix with a little guy at the bottom
     */
 
-#define width 40
-#define height getmaxy(stdscr) 
 #define maxdrops 70
 
 static int running;
 static int won;
 static int howmany; 
+static int width;
+static int height; 
 
 typedef struct{
 
@@ -85,17 +85,11 @@ static void stop() {
 void gamecatch(){
    
     srand(time(NULL)); //@sagucs hey 
-        
-    static int initialized = 0;
-        if(initialized == 0){ initscr();}else{refresh();} // turns out you don't wanna call initscr() many times per session so do this because it glitches otherwise 
-    ++initialized;
-    howmany = 0;
 
-    noecho();
-    cbreak();
-    nodelay(stdscr, TRUE);
-    keypad(stdscr, TRUE);
-    curs_set(0);
+    WINDOW *win = ratdrawbox();
+    howmany = 0; 
+    width = 40;
+    height = getmaxy(win) - 2;
 
     cursor curs = {width / 2, {"(>.<)_", "_(>.<)"}, 0};
 
@@ -123,18 +117,24 @@ void gamecatch(){
             if (!running) break;
         if (rand() % 10 < 3) spawndrops();
 
-        clear();
-            
-        mvprintw(0, width + 2, "caught: %d/30", howmany);
-        mvprintw(1, width + 2, "(catch 30 to win!)");
-        mvprintw(2, width + 2, "move with A and D");
-        mvprintw(3, width + 2, "or the or the corresponding arrows");
+        werase(win);
+        box(win, 0, 0);
+
+        mvwvline(win, 1, width + 1, ACS_VLINE, height);
+        mvwaddch(win, 0, width + 1, ACS_TTEE);
+        mvwaddch(win, height + 1, width + 1, ACS_BTEE);
+        //this should do it
+
+        mvwprintw(win, 1, width + 3, "caught: %d/30", howmany);
+        mvwprintw(win, 2, width + 3, "(catch 30 to win!)");
+        mvwprintw(win, 3, width + 3, "move with A and D");
+        mvwprintw(win, 4, width + 3, "or the or the corresponding arrows");
 
 
 
         for (int i = 0; i < maxdrops; i++) {
             if (droop[i].active) {
-                mvaddstr(droop[i].posy, droop[i].posx, droop[i].symbol);
+                mvwaddstr(win, droop[i].posy + 1, droop[i].posx + 1, droop[i].symbol);
                 droop[i].posy++;
                 if (droop[i].posy >= height) droop[i].active = 0;
                 
@@ -148,9 +148,9 @@ void gamecatch(){
             }
         }
 
-        mvaddstr(height - 1, curs.posx, curs.face[curs.direction]);
+        mvwaddstr(win, height, curs.posx + 1, curs.face[curs.direction]);
 
-    refresh(); 
+    wrefresh(win); 
     usleep(100000);    
     }
 

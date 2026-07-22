@@ -6,23 +6,16 @@
 #include <sys/stat.h>
 #include "rat.h"
 
-#ifdef __APPLE__
-  #define ratpath  "%s/Library/Application Support/rat"
-  #define ratsave "%s/Library/Application Support/rat/rat.txt"
-#else
-  #define ratpath  "%s/.local/share/rat"
-  #define ratsave "%s/.local/share/rat/rat.txt"
-#endif
 
-    char *ratart[] = { 
-        "     .---.\n  (\\./)     \\.......-\n  >' '<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_",
-        "           .---.\n-......./     (\\./)\n \"\"\"\"\"\"'.__)  >' '<\n           _\" \" ` \"",
-        "     .---.\n  (\\./)     \\.......-\n  >= =<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_",
-        "     .---.\n  (\\./)     \\.......-\n  >0 0<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_",
-        "     .---.\n  (\\./)     \\.......-\n  >^ ^<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_",
-    };
+char *ratart[] = { 
+    "     .---.\n  (\\./)     \\.......-\n  >' '<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_",
+    "           .---.\n-......./     (\\./)\n \"\"\"\"\"\"'.__)  >' '<\n           _\" \" ` \"",
+    "     .---.\n  (\\./)     \\.......-\n  >= =<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_",
+    "     .---.\n  (\\./)     \\.......-\n  >0 0<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_",
+     "     .---.\n  (\\./)     \\.......-\n  >^ ^<  (__.'\"\"\"\"\"\"\n  \" ` \" \"_",
+};
 
-  char *messages[] = {
+char *messages[] = {
     "squeak!",
     "squeak! !",
     "squeak",
@@ -30,78 +23,18 @@
     "SQUEAK",
     "SQUEAK!!",
     "SQUEAAAKKKKK",
-    };
+};
 
-    char *funfact[] = {
-        "press q to exit games !",
-        "rats love cheese!",
-        "i am sleepy.."
-    };
+char *funfact[] = {
+    "press q to exit games !",
+    "rats love cheese!",
+    "i am sleepy.."
+};
 
-void addstat(float *guy){
-
-    if(*guy < 98.5){
-        *guy += 1.5;
-    } else{*guy += 0.05;}     
-}
 
 Rat rat;
-
-void save(void) {
-    char path[256];
-    snprintf(path, sizeof(path), ratpath, getenv("HOME"));
-    mkdir(path, 0755);
-    snprintf(path, sizeof(path), ratsave, getenv("HOME"));
-
-    FILE *f = fopen(path, "w");
-    if (!f) return;
-    fprintf(f, "%f\n%f\n%f\n%f\n%f\n%d\n",
-        rat.hunger, rat.love, rat.fun, rat.clean, rat.health, rat.age);
-    fclose(f);
-}
-
-void load(void) {
-    char path[256];
-    snprintf(path, sizeof(path), ratsave, getenv("HOME"));
-
-    FILE *f = fopen(path, "r");
-    if (!f) {
-        rat.hunger = 80.0f;
-        rat.love   = 80.0f;
-        rat.fun    = 80.0f;
-        rat.clean  = 80.0f;
-        rat.health = 80.0f;
-        rat.age    = time(NULL);
-        return;
-    }
-    if(fscanf(f, "%f\n%f\n%f\n%f\n%f\n%d\n", 
-           &rat.hunger, &rat.love, &rat.fun, &rat.clean, &rat.health, &rat.age) != 6){
-    fprintf(stderr, "error: failed to initialize save data.\n");
-    }    
-    //this should shut the compiler up 
-
-    fclose(f);
-}
-
-float decay(float current, float dayspassed, float rate) {
-    float result = current - (dayspassed * rate);
-    return result < 0.0f ? 0.0f : result;
-}
-
-void setstat(){
-    int timenow = time(NULL);
-    int newage = timenow - rat.age;
-    float days = newage / 86400.0f; //one day 
-
-    rat.hunger = decay(rat.hunger, days, 50.0f); //hungry beast
-    rat.love   = decay(rat.love,   days, 1.1f); //rats love you they won't hate you easly 
-    rat.fun    = decay(rat.fun,    days, 25.0f);  
-    rat.clean  = decay(rat.clean,  days, 5.0f);//rats are surprisingly clean they clean themselves so slow  
-    rat.health = decay(rat.health, days, 0.6f);  
-
-    rat.age = timenow;
-}  
-//this is better yeah
+//i was cleaning the code up a bit and what the fuck is this
+//it's so funny Rat rat 
 
 void printrat(WINDOW *win){
  
@@ -151,14 +84,8 @@ int truing = 1;
  
     load();
     setstat();
- 
-    initscr();
-    cbreak();
-    noecho();
-    keypad(stdscr, TRUE);
-    curs_set(0);
- 
-    WINDOW *win = newwin(25, 45, 1, 1);
+
+    WINDOW *win = ratdrawbox();
     printrat(win);
  
     while(truing){
@@ -202,4 +129,3 @@ int truing = 1;
     printf("bye bye~~\n");
     return(0);
 }
-

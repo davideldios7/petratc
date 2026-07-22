@@ -1,8 +1,8 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -O2 -pipe 
-LDLIBS = -lncursesw -ltinfow
+LDLIBS = -lncurses -ltinfo
 TARGET = petratc
-SRC = petratc.c $(wildcard games/*.c)
+SRC = petratc.c rat.c $(wildcard games/*.c)
 PREFIX = /usr/local
 
 $(TARGET): $(SRC)
