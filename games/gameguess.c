@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #include <ncurses.h>
 #include "../rat.h"
 
@@ -42,6 +43,7 @@ void gameguess(){
     int solved = 0;
     int range = 100;
 
+    srand(time(NULL));
     int correct = (rand() % (range + 1));
 
     int history[maxhistory];

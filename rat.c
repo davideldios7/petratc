@@ -99,9 +99,10 @@ WINDOW *ratdrawbox(void){
 }
 
 int wrapprint(WINDOW *win, int row, int col, int maxwidth, const char *msg){
+    if(msg == NULL) return row;
 
     char copy[256];
-    strncpy(copy, msg, sizeof(copy));
+    strncpy(copy, msg, sizeof(copy) - 1);
     copy[sizeof(copy)-1] = '\0';
 
     char line[256] = "";
@@ -117,8 +118,14 @@ int wrapprint(WINDOW *win, int row, int col, int maxwidth, const char *msg){
             extra = 0;
         }
 
-        if(linelen > 0) strcat(line, " ");
-        strcat(line, word);
+        if(linelen > 0) {
+            if(strlen(line) + 1 < sizeof(line)) {
+                strcat(line, " ");
+            }
+        }
+        if(strlen(line) + strlen(word) < sizeof(line)) {
+            strcat(line, word);
+        }
 
         word = strtok(NULL, " ");
     }

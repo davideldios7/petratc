@@ -3,10 +3,11 @@ CFLAGS = -Wall -Wextra -O2 -pipe
 LDLIBS = -lncurses -ltinfo
 TARGET = petratc
 SRC = petratc.c rat.c $(wildcard games/*.c)
+OBJ = $(SRC:%.c=obj/%.o)
 PREFIX = /usr/local
 
-$(TARGET): $(SRC)
-	$(CC) $(CFLAGS) -o $(TARGET) $(SRC) $(LDLIBS)
+$(TARGET): $(OBJ)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ) $(LDLIBS)
 
 install: $(TARGET)
 	install -D $(TARGET) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
@@ -14,5 +15,9 @@ install: $(TARGET)
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/$(TARGET)
 
+obj/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) $(OBJ)

@@ -173,7 +173,7 @@ static bignum divmixregbig(bignum a, double regnum){
 
 static char *bignumprint(bignum b) {
     //32 bytes is more than enough for 124.24 trillion idk
-    char *nice = malloc(32 * sizeof(char)); 
+    char *nice = malloc(32 * sizeof(char));
     if(nice == NULL) return NULL;
 
     if(b.y >= 0 && b.y < 12) {
@@ -181,7 +181,7 @@ static char *bignumprint(bignum b) {
     } else{
         snprintf(nice, 32, "%.2lfe3*%d", b.x, b.y);
     }
-    return nice; 
+    return nice;
 }
 
 
@@ -239,8 +239,12 @@ static void drawwin(WINDOW *win, bignum cheeses){
 
     char *scorestr = bignumprint(cheeses);
     char scoremsg[64];
-    snprintf(scoremsg, sizeof(scoremsg), "cheese: %s", scorestr);
-    free(scorestr);
+    if(scorestr != NULL) {
+        snprintf(scoremsg, sizeof(scoremsg), "cheese: %s", scorestr);
+        free(scorestr);
+    } else {
+        snprintf(scoremsg, sizeof(scoremsg), "cheese: ERROR");
+    }
 
     if(mode == layoutwide){
         mvwprintw(win, 1, scorecol, "%s", scoremsg);

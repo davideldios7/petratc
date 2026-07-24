@@ -64,7 +64,15 @@ void lerw() {
     char *vis = calloc(total, 1); //visited
     int  *px  = malloc(total * sizeof(int)); //path x
     int  *py  = malloc(total * sizeof(int)); //path y
-    int  *ip  = malloc(total * sizeof(int)); // index of path 
+    int  *ip  = malloc(total * sizeof(int)); // index of path
+
+    if(vis == NULL || px == NULL || py == NULL || ip == NULL) {
+        free(vis);
+        free(px);
+        free(py);
+        free(ip);
+        return;
+    }
     vis[0] = 1;
     grid[1][1] = grid[1][2] = grid[2][1] = grid[2][2] = ' '; //these should be open always 
     int vc = 1;
@@ -203,8 +211,20 @@ static void properrestart(cursor *curs, int *W, int *H) {
     *H = height;
 
     grid = malloc(*H * sizeof(char *));
-    for (int y = 0; y < *H; y++)
+    if(grid == NULL) {
+        running = 0; 
+        return;
+    }
+    for (int y = 0; y < *H; y++) {
         grid[y] = malloc(*W * sizeof(char));
+        if(grid[y] == NULL) {
+            // Free already allocated rows
+            for(int i = 0; i < y; i++) free(grid[i]);
+            free(grid);
+            running = 0; 
+            return;
+        }
+    }
 
     lerw();
     spawncheeses();
@@ -225,9 +245,20 @@ void gamemaze(){
     int W = width;
     int H = height;
 
-    grid = malloc(H * sizeof(char *)); //those who allocate memory 
-    for (int y = 0; y < H; y++)
-    grid[y] = malloc(W * sizeof(char));
+    grid = malloc(H * sizeof(char *)); //those who allocate memory
+    if(grid == NULL) {
+        stop();
+        return;
+    }
+    for (int y = 0; y < H; y++) {
+        grid[y] = malloc(W * sizeof(char));
+        if(grid[y] == NULL) {
+            for(int i = 0; i < y; i++) free(grid[i]);
+            free(grid);
+            stop();
+            return;
+        }
+    }
 
     lerw();
     spawncheeses();
