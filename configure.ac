@@ -5,9 +5,7 @@ AC_PROG_CC
 #what if i have pdcurses or just curses and not ncurses idk
 #this will be useful only when i decide to port it to widnows 
 CURSES_LIB=""
-AC_CHECK_LIB([ncursesw], [initscr], [CURSES_LIB="-lncursesw"])
-AS_IF([test "x$CURSES_LIB" = "x"],
-  [AC_CHECK_LIB([ncurses], [initscr], [CURSES_LIB="-lncurses"])])
+AC_CHECK_LIB([ncurses], [initscr], [CURSES_LIB="-lncurses"])
 AS_IF([test "x$CURSES_LIB" = "x"],
   [AC_CHECK_LIB([curses], [initscr], [CURSES_LIB="-lcurses"])])
 AS_IF([test "x$CURSES_LIB" = "x"],
