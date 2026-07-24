@@ -3501,7 +3501,7 @@ fi
 fi
 if test "x$CURSES_LIB" = "x"
 then :
-  as_fn_error $? "no curses library found (tried ncursesw, ncurses, curses, pdcurses)" "$LINENO" 5
+  as_fn_error $? "no curses library found (ncurses, curses, pdcurses)" "$LINENO" 5
 fi
 
 #in mac having -ltinfo in your makefile gives you a linker error

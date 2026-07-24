@@ -11,7 +11,7 @@ AS_IF([test "x$CURSES_LIB" = "x"],
 AS_IF([test "x$CURSES_LIB" = "x"],
   [AC_CHECK_LIB([pdcurses], [initscr], [CURSES_LIB="-lpdcurses"])])
 AS_IF([test "x$CURSES_LIB" = "x"],
-  [AC_MSG_ERROR([no curses library found (tried ncursesw, ncurses, curses, pdcurses)])])
+  [AC_MSG_ERROR([no curses library found (ncurses, curses, pdcurses)])])
 
 #in mac having -ltinfo in your makefile gives you a linker error
 #whereas in linux you need it
