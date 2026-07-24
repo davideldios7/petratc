@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -O2 -pipe 
-LDLIBS = -lncurses -ltinfo
+LDLIBS = -lncurses
 TARGET = petratc
 SRC = petratc.c rat.c $(wildcard games/*.c)
 OBJ = $(SRC:%.c=obj/%.o)
