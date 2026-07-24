@@ -1,7 +1,8 @@
-CC = gcc
+CC = @CC@
 CFLAGS = -Wall -Wextra -O2 -pipe 
-LDLIBS = -lncurses
+LDLIBS = @CURSES_LIB@
 TARGET = petratc
+CONF = configure configure~ config.log config.status Makefile autom4te.cache/
 SRC = petratc.c rat.c $(wildcard games/*.c)
 OBJ = $(SRC:%.c=obj/%.o)
 PREFIX = /usr/local
@@ -21,3 +22,6 @@ obj/%.o: %.c
 
 clean:
 	rm -f $(TARGET) $(OBJ)
+
+bigclean: 
+	rm -rf $(TARGET) $(OBJ) $(CONF)
