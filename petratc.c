@@ -33,9 +33,9 @@ char *funfact[] = {
 
 
 Rat rat;
-//i was cleaning the code up a bit and what the fuck is this
+/*i was cleaning the code up a bit and what the fuck is this
 //it's so funny Rat rat 
-
+*/
 void printrat(WINDOW *win){
  
     werase(win);
@@ -101,13 +101,13 @@ int truing = 1;
         case '2':
             endwin();
             gamemaze();
-            //printf("the maze is really dark squeak...\n\n");
+            /*printf("the maze is really dark squeak...\n\n");*/
             refresh();
             break;
         case '4':
             endwin();
             gamecatch();
-            //printf("your rat feels cleaner!\n\n");
+            /*printf("your rat feels cleaner!\n\n");*/
             refresh();
             break;
         case '5':
@@ -118,7 +118,7 @@ int truing = 1;
         case '9': break;
         case '0': truing = 0; break;
         }
-// i will put those printfs where the squeaks go but i have no clue how to do that today  
+/* i will put those printfs where the squeaks go but i have no clue how to do that today  */
         if(truing) printrat(win);
     }
  

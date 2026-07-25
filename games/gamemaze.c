@@ -276,8 +276,8 @@ void gamemaze(){
             case 'q': case 'Q': stop(); break;
             case 'r': case 'R': properrestart(&curs, &W, &H); break;
             case 'a': case 'A': case KEY_LEFT:
-                if(!iswall(curs.posy, curs.posx - 1)){
-                    curs.posx -= 1; 
+                if(curs.posx > 0 && !iswall(curs.posy, curs.posx - 1)){
+                    curs.posx -= 1;
                 }
                     break;
             case 'd': case 'D': case KEY_RIGHT:
@@ -286,7 +286,7 @@ void gamemaze(){
                 }
                     break;
             case 'w': case 'W': case KEY_UP:
-                if (!iswall(curs.posy - 1, curs.posx)){
+                if (curs.posy > 0 && !iswall(curs.posy - 1, curs.posx)){
                     curs.posy -= 1;
                 }
                     break; 

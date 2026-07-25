@@ -47,7 +47,7 @@ void load(void) {
            &rat.hunger, &rat.love, &rat.fun, &rat.clean, &rat.health, &rat.age) != 6){
     fprintf(stderr, "error: failed to initialize save data.\n");
     }    
-    //this should shut the compiler up 
+    /*this should shut the compiler up*/
 
     fclose(f);
 }
@@ -67,12 +67,12 @@ float decay(float current, float dayspassed, float rate) {
 void setstat(){
     int timenow = time(NULL);
     int newage = timenow - rat.age;
-    float days = newage / 86400.0f; //one day 
+    float days = newage / 86400.0f; /*one day*/
 
-    rat.hunger = decay(rat.hunger, days, 50.0f); //hungry beast
-    rat.love   = decay(rat.love,   days, 1.1f); //rats love you they won't hate you easly 
+    rat.hunger = decay(rat.hunger, days, 50.0f); /*hungry beast*/
+    rat.love   = decay(rat.love,   days, 1.1f); /*rats love you they won't hate you easly*/
     rat.fun    = decay(rat.fun,    days, 25.0f);  
-    rat.clean  = decay(rat.clean,  days, 5.0f);//rats are surprisingly clean they clean themselves so slow  
+    rat.clean  = decay(rat.clean,  days, 5.0f);/*rats are surprisingly clean they clean themselves so slow*/
     rat.health = decay(rat.health, days, 0.6f);  
 
     rat.age = timenow;
