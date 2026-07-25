@@ -2,7 +2,7 @@
 
 # installing: 
 ```term
-./confugure && make && sudo make install
+./configure && make && sudo make install
 ```
 also, you'll need `ncurses-devel` to compile it
 
