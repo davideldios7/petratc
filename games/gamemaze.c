@@ -37,7 +37,7 @@ static void stop() {
     clear();
     refresh();
     endwin();
-    if(won){addstat(&rat.fun); printf("the rat feels less hungry...\n\n");}
+    if(won){addstat(&rat.fun);}
     won = 0;
     found = 0;
     running = 0; 
@@ -270,10 +270,9 @@ void gamemaze(){
     running = 1;
     
     while (running) {
-        if (!running) stop();
         int ch = getch();
         switch (ch) {
-            case 'q': case 'Q': stop(); break;
+            case 'q': case 'Q': running = 0; break;
             case 'r': case 'R': properrestart(&curs, &W, &H); break;
             case 'a': case 'A': case KEY_LEFT:
                 if(curs.posx > 0 && !iswall(curs.posy, curs.posx - 1)){

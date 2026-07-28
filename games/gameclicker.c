@@ -182,6 +182,7 @@ static char *bignumprint(bignum b) {
         snprintf(nice, 32, "%.2lfe3*%d", b.x, b.y);
     }
     return nice;
+    free(nice); 
 }
 
 
@@ -279,7 +280,7 @@ void gameclicker(){
         int ch;
         while((ch = getch()) != ERR){ //drain the whole queue each frame so rapid clicks/keys aren't ignroed 
             switch (ch) {
-                case 'q': case 'Q': stop(); break;
+                case 'q': case 'Q': running = 0; break;
                 case 'a': cheeses = addmixregbig(cheeses, 50.0); break;
                 case 'b': cheeses = mulmixregbig(cheeses, 235.2); break;
                 case KEY_MOUSE: {

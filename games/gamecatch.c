@@ -97,10 +97,9 @@ void gamecatch(){
 
     running = 1;
     while (running) {
-        if(!running){stop();} 
         int ch = getch();
         switch (ch) {
-            case 'q': case 'Q': stop(); break;
+            case 'q': case 'Q': running = 0; break;
             case 'a': case 'A': case KEY_LEFT:
                 curs.posx-= 2;
                 if(curs.posx < 0) curs.posx = width - 6;
@@ -123,7 +122,7 @@ void gamecatch(){
         mvwvline(win, 1, width + 1, ACS_VLINE, height);
         mvwaddch(win, 0, width + 1, ACS_TTEE);
         mvwaddch(win, height + 1, width + 1, ACS_BTEE);
-        //this should do it
+        /*this should do it*/
 
         mvwprintw(win, 1, width + 3, "caught: %d/30", howmany);
         mvwprintw(win, 2, width + 3, "(catch 30 to win!)");
@@ -143,7 +142,7 @@ void gamecatch(){
                     droop[i].posx <= curs.posx + 5) {
                     droop[i].active = 0;
                     howmany++;
-                    if(howmany == 30){won = 1; running = 0; stop();}
+                    if(howmany == 30){won = 1; running = 0;}
                 }
             }
         }
