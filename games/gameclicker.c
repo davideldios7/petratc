@@ -57,7 +57,16 @@ static char *cheeseart = {
 typedef struct bignum{
     double x;
     int y;
-}bignum; 
+}bignum;
+
+typedef struct ratworker{
+    char *name; 
+    bignum price;
+    bignum clicks; 
+    bignum multiplier; //the more you buy the more expensive the unit becomes
+    ////line 67 six seveeennn
+    bignum owned;
+}ratworker;
 
 static char *digit[] = {
     "", "K", "M", "B", "T",
@@ -154,22 +163,61 @@ static bignum divbignum(bignum a, bignum b){
     result.y = a.y - b.y;
     return normalizebignum(result);
 }
+
+/*
+ * returns 1 if a is larger
+ * returns 0 if same number
+ * returns -1 is a is tiny
+*/
+static int comparebignum(bignum a, bignum b){
+    //branch predictors will hate this function :sob:
+    if(a.y == b.y){
+        if(a.x == b.x){
+            return 0;
+            }else if(a.x > b.x){
+                return 1;
+            }else return -1;
+        }else if(a.y > b.y){ 
+            return 1;
+    } else return -1; 
+}
  
 static bignum addmixregbig(bignum a, double regnum){
     return addbignum(a, normalize(regnum));
 }
- 
 static bignum submixregbig(bignum a, double regnum){
     return subbignum(a, normalize(regnum));
-}
- 
+} 
 static bignum mulmixregbig(bignum a, double regnum){
     return mulbignum(a, normalize(regnum));
 }
- 
 static bignum divmixregbig(bignum a, double regnum){
     return divbignum(a, normalize(regnum));
 }
+
+
+static bignum calculateworkerincome(ratworker worker){
+    return mulbignum(worker.clicks, worker.owned);
+}
+
+static bignum calculatetotalincome(ratworker workers[], int n){
+    bignum total = {0.0, 0}; 
+    for(int i = 0; i < n; i++){
+        total = addbignum(total, calculateworkerincome(workers[i]));
+    } 
+    return total;  
+} 
+
+static int buyworker(bignum *cheeses, ratworker *worker){
+    if(comparebignum(*cheeses, worker->price) < 0) return 0; //nigga broke
+
+    *cheeses = subbignum(*cheeses, worker->price);
+    worker->owned = addmixregbig(worker->owned, 1.0);
+    worker->price = mulbignum(worker->price, worker->multiplier);
+
+    return 1;
+}
+
 
 static char *bignumprint(bignum b) {
     //32 bytes is more than enough for 124.24 trillion idk
@@ -182,8 +230,8 @@ static char *bignumprint(bignum b) {
         snprintf(nice, 32, "%.2lfe3*%d", b.x, b.y);
     }
     return nice;
-    free(nice); 
 }
+
 
 
 //wide = art and score side by side
@@ -214,7 +262,7 @@ static void drawwin(WINDOW *win, bignum cheeses){
     int scorecol, scorewrapw;
 
     if(mode == layoutwide){
-        scorecol = winw / 2 + 2;
+        scorecol = winw / 2 - 25;
         scorewrapw = winw - scorecol - 2;
     } else {
         scorecol = 2;
@@ -252,7 +300,7 @@ static void drawwin(WINDOW *win, bignum cheeses){
         wrapprint(win, 3, scorecol, scorewrapw, "click the cheese!");
     } else {
         int scorerow = artrow0 + artrows + 1;
-        wrapprint(win, scorerow, scorecol, scorewrapw, scoremsg);
+        wrapprint(win, scorerow,   scorecol, scorewrapw, scoremsg);
         wrapprint(win, scorerow+1, scorecol, scorewrapw, "click the cheese!");
     }
 
@@ -272,10 +320,25 @@ void gameclicker(){
     bignum cheeses = {0.0, 0};
     bignum onecheese = {1.0, 0}; //what a single click is worth
 
+#define nhowmanytiers 11
+static ratworker workers[nhowmanytiers] = {
+    //name,  1                     bignum price,clicks/tick,multiplier,owned (howmanyowned)
+    { "small rat",                 {10.0, 0},  {1.0, 0},   {1.15, 0},  {0.0, 0} },
+    { "brown rat",                 {20.0, 0},  {2.0, 0},   {1.15, 0},  {0.0, 0} },
+    { "fancy rat",                 {25.0, 0},  {4.0, 0},   {1.14, 0},  {0.0, 0} },
+    { "fat rat",                   {130.0, 0}, {10.0, 0},  {1.13, 0},  {0.0, 0} },
+    { "evil rat",                  {400.0, 0}, {15.0, 0},  {1.13, 0},  {0.0, 0} },
+    { "rat farm",                  {1.2, 1},   {25.0, 0},  {1.12, 0},  {0.0, 0} },
+    { "cheese mill",               {3.0, 1},   {30.0, 0},  {1.11, 0},  {0.0, 0} },
+    { "dairy factory",             {9.0, 1},   {50.0, 0},  {1.11, 0},  {0.0, 0} },
+    { "cheese research institute", {9.5, 1},   {80.0, 0},  {1.05, 0}, {0.0, 0} },
+    { "cheese accelerator",        {30.0, 1},  {100.0, 0}, {1.11, 0},  {0.0, 0} },
+    { "the cheese singularity",    {120.0, 1}, {250.0, 0}, {1.10, 0},  {0.0, 0} },
+};
+
     drawwin(win, cheeses);
 
     while(running){
-        if(!running){stop(); break;}
 
         int ch;
         while((ch = getch()) != ERR){ //drain the whole queue each frame so rapid clicks/keys aren't ignroed 
