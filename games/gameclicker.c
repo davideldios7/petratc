@@ -195,6 +195,11 @@ static bignum divmixregbig(bignum a, double regnum){
     return divbignum(a, normalize(regnum));
 }
 
+/* clamps a bignum to zero if it somehow goes negative */
+static bignum clampnonneg(bignum b){
+    if(b.x < 0.0 || b.y < 0) return (bignum){0.0, 0};
+    return b;
+}
 
 static bignum calculateworkerincome(ratworker worker){
     return mulbignum(worker.clicks, worker.owned);
@@ -212,6 +217,7 @@ static int buyworker(bignum *cheeses, ratworker *worker){
     if(comparebignum(*cheeses, worker->price) < 0) return 0; //nigga broke
 
     *cheeses = subbignum(*cheeses, worker->price);
+    *cheeses = clampnonneg(*cheeses);
     worker->owned = addmixregbig(worker->owned, 1.0);
     worker->price = mulbignum(worker->price, worker->multiplier);
 
@@ -245,8 +251,7 @@ static layoutmode getlayout(WINDOW *win){
     return (getmaxx(win) >= getmaxy(win) * 2) ? layoutwide : layoutnarrow;
 }
 
-static void drawwin(WINDOW *win, bignum cheeses){
-
+static void drawwin(WINDOW *win, bignum cheeses, ratworker workers[], int n){
     werase(win);
     box(win, 0, 0);
 
@@ -293,17 +298,97 @@ static void drawwin(WINDOW *win, bignum cheeses){
         free(scorestr);
     } else {
         snprintf(scoremsg, sizeof(scoremsg), "cheese: ERROR");
+    }    
+    char *incomestr = bignumprint(calculatetotalincome(workers, n));
+    char incomemsg[64];
+    if(incomestr != NULL) {
+        snprintf(incomemsg, sizeof(incomemsg), "income/s: %s", incomestr);
+        free(incomestr);
+    } else {
+        snprintf(incomemsg, sizeof(incomemsg), "income/s: ERROR");
     }
 
     if(mode == layoutwide){
         mvwprintw(win, 1, scorecol, "%s", scoremsg);
-        wrapprint(win, 3, scorecol, scorewrapw, "click the cheese!");
+        mvwprintw(win, 2, scorecol, "%s", incomemsg);
+        wrapprint(win, 3, scorecol, scorewrapw, "click the cheese!");;
     } else {
         int scorerow = artrow0 + artrows + 1;
         wrapprint(win, scorerow,   scorecol, scorewrapw, scoremsg);
-        wrapprint(win, scorerow+1, scorecol, scorewrapw, "click the cheese!");
+        wrapprint(win, scorerow+1, scorecol, scorewrapw, incomemsg);
+        wrapprint(win, scorerow+2, scorecol, scorewrapw, "click the cheese!");
     }
+}
 
+#define shopwidth 45
+static void drawshop(WINDOW *win, ratworker workers[], int n, int selected, bignum cheeses){
+    int winh = getmaxy(win);
+    int winw = getmaxx(win);
+
+    int shoph = n + 2;
+    if(shoph > winh - 2) shoph = winh - 2; 
+    int shopw = shopwidth;
+    if(shopw > winw - 4) shopw = winw - 4;
+    if(shoph < 3 || shopw < 10) return; 
+    //if that skip it
+
+    int shopy;
+    if(getlayout(win) == layoutwide){
+        shopy = 1;
+    }else shopy = winh - shoph - 1;
+
+    int shopx = winw - shopw - 2;
+
+    mvwhline(win, shopy, shopx + 1, 0, shopw - 2);
+    mvwhline(win, shopy + shoph - 1, shopx + 1, 0, shopw - 2);
+    mvwvline(win, shopy + 1, shopx, 0, shoph - 2);
+    mvwvline(win, shopy + 1, shopx + shopw - 1, 0, shoph - 2);
+    mvwaddch(win, shopy, shopx, ACS_ULCORNER);
+    mvwaddch(win, shopy, shopx + shopw - 1, ACS_URCORNER);
+    mvwaddch(win, shopy + shoph - 1, shopx, ACS_LLCORNER);
+    mvwaddch(win, shopy + shoph - 1, shopx + shopw - 1, ACS_LRCORNER);
+    mvwprintw(win, shopy, shopx + 2, " shop (up/down, enter) ");
+
+    int availw = shopw - 2;
+    int visible = shoph - 2;
+    int start = 0;
+    if(selected >= visible) start = selected - visible + 1;
+    if(start > n - visible) start = n - visible;
+    if(start < 0) start = 0;
+
+    for(int i = start; i < start + visible && i < n; i++){
+        ratworker *w = &workers[i];
+        char *pricestr = bignumprint(w->price);
+        char *ownedstr = bignumprint(w->owned);
+        char rightstr[32];
+        snprintf(rightstr, sizeof(rightstr), "$%s x%s",
+            pricestr ? pricestr : "?", ownedstr ? ownedstr : "?");        if(pricestr) free(pricestr);
+        if(ownedstr) free(ownedstr);
+
+        int rightlen = strlen(rightstr);
+        int namewidth = availw - rightlen - 1; //-1 for a gap column
+        if(namewidth < 0) namewidth = 0;
+
+        char row[64];
+        //fill the whole width first so shrinking a wider row doesn't leave weird gaps
+        snprintf(row, sizeof(row), "%-*.*s", availw, availw, "");
+
+        int affordable = comparebignum(cheeses, w->price) >= 0;
+        if(i == selected) wattron(win, A_REVERSE);
+        else if(!affordable) wattron(win, A_DIM);
+
+        mvwprintw(win, shopy + 1 + (i - start), shopx + 1, "%s", row);
+        mvwprintw(win, shopy + 1 + (i - start), shopx + 1, "%-*.*s", namewidth, namewidth, w->name);
+        mvwprintw(win, shopy + 1 + (i - start), shopx + 1 + availw - rightlen, "%s", rightstr);
+
+        if(i == selected) wattroff(win, A_REVERSE);
+        else if(!affordable) wattroff(win, A_DIM);
+    }//bwehghg
+}
+
+static void draweverything(WINDOW *win, bignum cheeses, ratworker workers[], int n, int selected){
+    drawwin(win, cheeses, workers, n);
+    drawshop(win, workers, n, selected, cheeses);
     wrefresh(win);
 }
 
@@ -319,6 +404,7 @@ void gameclicker(){
 
     bignum cheeses = {0.0, 0};
     bignum onecheese = {1.0, 0}; //what a single click is worth
+    int selected = 0;
 
 #define nhowmanytiers 11
 static ratworker workers[nhowmanytiers] = {
@@ -336,8 +422,9 @@ static ratworker workers[nhowmanytiers] = {
     { "the cheese singularity",    {120.0, 1}, {250.0, 0}, {1.10, 0},  {0.0, 0} },
 };
 
-    drawwin(win, cheeses);
-
+    draweverything(win, cheeses, workers, nhowmanytiers, selected); 
+    
+    time_t lasttime = time(NULL); 
     while(running){
 
         int ch;
@@ -346,6 +433,11 @@ static ratworker workers[nhowmanytiers] = {
                 case 'q': case 'Q': running = 0; break;
                 case 'a': cheeses = addmixregbig(cheeses, 50.0); break;
                 case 'b': cheeses = mulmixregbig(cheeses, 235.2); break;
+                case KEY_UP: if(selected > 0) selected--; break;
+                case KEY_DOWN: if(selected < nhowmanytiers - 1) selected++; break;
+                case '\n': case ' ': case KEY_ENTER:
+                    buyworker(&cheeses, &workers[selected]);
+                    break;
                 case KEY_MOUSE: {
                     MEVENT event;
                     if(getmouse(&event) == OK && (event.bstate & BUTTON1_PRESSED)){
@@ -364,7 +456,14 @@ static ratworker workers[nhowmanytiers] = {
             if(!running) break;
         }
 
-        if(running) drawwin(win, cheeses);
+        time_t currenttime = time(NULL);
+        if(currenttime >= lasttime +1){
+            cheeses = addbignum(cheeses, calculatetotalincome(workers, nhowmanytiers));
+            cheeses = clampnonneg(cheeses);
+            lasttime = currenttime;  
+        }
+
+        if(running) draweverything(win, cheeses, workers, nhowmanytiers, selected);
 
         usleep(16667); //60 fps according to google ai overview lmao
     }
