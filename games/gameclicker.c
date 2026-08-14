@@ -5,6 +5,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <ncurses.h>
+#include <sys/stat.h>
 #include "../rat.h"
 
 /*
@@ -12,7 +13,8 @@ i lowkey stole the art of the little rat and the cheese from the internet lol
 https://asciiart.website/art/752
 */
 
-int running;
+static int running;
+
 
 static void stop() {
     clear();
@@ -386,6 +388,65 @@ static void drawshop(WINDOW *win, ratworker workers[], int n, int selected, bign
     }//bwehghg
 }
 
+//i guess i will use this in a game... and i have plans
+//for another game that will also require saving hehe
+#ifdef __APPLE__
+  #define clickerpath     "%s/Library/Application Support/rat"
+  #define clickersavepath "%s/Library/Application Support/rat/clicker.txt"
+#else
+  #define clickerpath     "%s/.local/share/rat"
+  #define clickersavepath "%s/.local/share/rat/clicker.txt"
+#endif
+
+
+static void clickersave(bignum cheeses, ratworker workers[], int n){
+    char path[256];
+    snprintf(path, sizeof(path), clickerpath, getenv("HOME"));
+    mkdir(path, 0755);
+    snprintf(path, sizeof(path), clickersavepath, getenv("HOME"));
+    FILE *f = fopen(path, "w");
+    if(!f) return;
+    fprintf(f, "%lf\n%d\n", cheeses.x, cheeses.y);
+    for(int i = 0; i < n; i++){
+        fprintf(f, "%lf\n%d\n%lf\n%d\n",
+            workers[i].price.x, workers[i].price.y,
+            workers[i].owned.x, workers[i].owned.y);
+    }
+    fclose(f);
+}
+
+static void clickerload(bignum *cheeses, ratworker workers[], int n){
+    char path[256];
+    snprintf(path, sizeof(path), clickersavepath, getenv("HOME"));
+
+    FILE *f = fopen(path, "r");
+    if(!f) return; 
+
+    if(fscanf(f, "%lf\n%d\n", &cheeses->x, &cheeses->y) != 2){
+        fprintf(stderr, "error: failed to load clicker save data.\n");
+        fclose(f);
+        return; 
+    }  
+    for(int i = 0; i < n; i++){
+        if(fscanf(f, "%lf\n%d\n%lf\n%d\n",
+            &workers[i].price.x, &workers[i].price.y,
+            &workers[i].owned.x, &workers[i].owned.y) != 4){
+            fprintf(stderr, "error: failed to load clicker save data.\n");
+            break;
+        }
+    }
+    fclose(f);
+}
+//i should make a version of this that just saves a big string 
+//so i can use many 
+//like generate the "save file" that returns a pointer to a char
+//and then propersave(*thatchar, "file.txt") and it makes file.txt 
+//and it saves *thatchar to it idk this seems like a job for claude
+
+
+
+
+
 static void draweverything(WINDOW *win, bignum cheeses, ratworker workers[], int n, int selected){
     drawwin(win, cheeses, workers, n);
     drawshop(win, workers, n, selected, cheeses);
@@ -421,7 +482,9 @@ static ratworker workers[nhowmanytiers] = {
     { "cheese accelerator",        {30.0, 1},  {100.0, 0}, {1.11, 0},  {0.0, 0} },
     { "the cheese singularity",    {120.0, 1}, {250.0, 0}, {1.10, 0},  {0.0, 0} },
 };
-
+    
+    clickerload(&cheeses, workers, nhowmanytiers); 
+    
     draweverything(win, cheeses, workers, nhowmanytiers, selected); 
     
     time_t lasttime = time(NULL); 
@@ -467,6 +530,6 @@ static ratworker workers[nhowmanytiers] = {
 
         usleep(16667); //60 fps according to google ai overview lmao
     }
-
+clickersave(cheeses, workers, nhowmanytiers);
 stop();
 }

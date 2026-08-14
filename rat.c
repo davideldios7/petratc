@@ -8,6 +8,7 @@
 
 
 /*functions used in initilization/main menu (not games)*/
+
 #ifdef __APPLE__
   #define ratpath  "%s/Library/Application Support/rat"
   #define ratsave "%s/Library/Application Support/rat/rat.txt"
