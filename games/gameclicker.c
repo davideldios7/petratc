@@ -64,11 +64,19 @@ typedef struct bignum{
 typedef struct ratworker{
     char *name; 
     bignum price;
+    ////line 67 six seveeennn
     bignum clicks; 
     bignum multiplier; //the more you buy the more expensive the unit becomes
-    ////line 67 six seveeennn
     bignum owned;
 }ratworker;
+
+typedef struct{
+    char *name;
+    bignum price;
+    bignum multiplier;
+    char *whichstat;  
+    int howmanystat;  //how many times itc alls addstat() for that stat
+}prizes;  
 
 static char *digit[] = {
     "", "K", "M", "B", "T",
@@ -222,6 +230,30 @@ static int buyworker(bignum *cheeses, ratworker *worker){
     *cheeses = clampnonneg(*cheeses);
     worker->owned = addmixregbig(worker->owned, 1.0);
     worker->price = mulbignum(worker->price, worker->multiplier);
+
+    return 1;
+}
+
+static int buyprize(bignum *cheeses, prizes *prize){
+    if(comparebignum(*cheeses, prize->price) < 0) return 0;
+
+    *cheeses = subbignum(*cheeses, prize->price);
+    *cheeses = clampnonneg(*cheeses);
+
+    prize->price = mulbignum(prize->price, prize->multiplier);
+
+    float *stat = NULL;
+    if(strcmp(prize->whichstat, "hunger") == 0)      stat = &rat.hunger;
+    else if(strcmp(prize->whichstat, "health") == 0) stat = &rat.health;
+    else if(strcmp(prize->whichstat, "love") == 0)   stat = &rat.love;
+    else if(strcmp(prize->whichstat, "fun") == 0)    stat = &rat.fun;
+    else if(strcmp(prize->whichstat, "clean") == 0)  stat = &rat.clean;
+
+    if(stat){
+        for(int i = 0; i < prize->howmanystat; i++){
+            addstat(stat);
+        }
+    }
 
     return 1;
 }
@@ -453,6 +485,15 @@ static void draweverything(WINDOW *win, bignum cheeses, ratworker workers[], int
     wrefresh(win);
 }
 
+
+#define spacedebouncems 20 
+
+static long nowms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000L + ts.tv_nsec / 1000000L;
+}
+
 void gameclicker(){
 
     srand(time(NULL));
@@ -469,7 +510,7 @@ void gameclicker(){
 
 #define nhowmanytiers 11
 static ratworker workers[nhowmanytiers] = {
-    //name,  1                     bignum price,clicks/tick,multiplier,owned (howmanyowned)
+    //name,                      bignum price,clicks/tick,multiplier,owned (howmanyowned)
     { "small rat",                 {10.0, 0},  {1.0, 0},   {1.15, 0},  {0.0, 0} },
     { "brown rat",                 {20.0, 0},  {2.0, 0},   {1.15, 0},  {0.0, 0} },
     { "fancy rat",                 {25.0, 0},  {4.0, 0},   {1.14, 0},  {0.0, 0} },
@@ -478,29 +519,54 @@ static ratworker workers[nhowmanytiers] = {
     { "rat farm",                  {1.2, 1},   {25.0, 0},  {1.12, 0},  {0.0, 0} },
     { "cheese mill",               {3.0, 1},   {30.0, 0},  {1.11, 0},  {0.0, 0} },
     { "dairy factory",             {9.0, 1},   {50.0, 0},  {1.11, 0},  {0.0, 0} },
-    { "cheese research institute", {9.5, 1},   {80.0, 0},  {1.05, 0}, {0.0, 0} },
+    { "cheese research institute", {9.5, 1},   {80.0, 0},  {1.05, 0},  {0.0, 0} },
     { "cheese accelerator",        {30.0, 1},  {100.0, 0}, {1.11, 0},  {0.0, 0} },
     { "the cheese singularity",    {120.0, 1}, {250.0, 0}, {1.10, 0},  {0.0, 0} },
 };
+
+#define nhowmanyprizes 10
+static prizes prize[nhowmanyprizes] = {
+    {"solid cheese",       {100.0, 0}, {1.15, 0}, "hunger", 2},
+    {"cheese mountain",   {5000.0, 0}, {1.15, 0}, "hunger", 8},
+    {"cheese wheel",       {500.0, 0}, {1.15, 0}, "health", 1}, 
+    {"medical cheese",    {8000.0, 0}, {1.15, 0}, "health", 5},
+    {"cheese fountain",   {2000.0, 0}, {1.15, 0}, "love",   3}, 
+    {"love cheese cake", {15000.0, 0}, {1.15, 0}, "love",   7},
+    {"squeaky cheese",     {300.0, 0}, {1.15, 0}, "fun",    2},
+    {"party cheese",     {12000.0, 0}, {1.15, 0}, "fun",    6},
+    {"soap cheese",        {400.0, 0}, {1.15, 0}, "clean",  2},
+    {"bubble cheese",     {9000.0, 0}, {1.15, 0}, "clean",  5}    
+}; 
+
+
     
     clickerload(&cheeses, workers, nhowmanytiers); 
     
     draweverything(win, cheeses, workers, nhowmanytiers, selected); 
     
-    time_t lasttime = time(NULL); 
+    time_t lasttime = time(NULL);
+    static int spaceheld = 0;
+    static long lastspacetime = 0;
     while(running){
 
         int ch;
         while((ch = getch()) != ERR){ //drain the whole queue each frame so rapid clicks/keys aren't ignroed 
             switch (ch) {
                 case 'q': case 'Q': running = 0; break;
-                case 'a': cheeses = addmixregbig(cheeses, 50.0); break;
-                case 'b': cheeses = mulmixregbig(cheeses, 235.2); break;
                 case KEY_UP: if(selected > 0) selected--; break;
                 case KEY_DOWN: if(selected < nhowmanytiers - 1) selected++; break;
-                case '\n': case ' ': case KEY_ENTER:
+                case '\n': case KEY_ENTER:
                     buyworker(&cheeses, &workers[selected]);
                     break;
+                case ' ': {
+                    long now = nowms();
+                    if(!spaceheld){
+                    cheeses = addbignum(cheeses, onecheese); 
+                    spaceheld = 1;
+                        } 
+                    lastspacetime = now;
+                    break;
+                    } 
                 case KEY_MOUSE: {
                     MEVENT event;
                     if(getmouse(&event) == OK && (event.bstate & BUTTON1_PRESSED)){
@@ -517,6 +583,10 @@ static ratworker workers[nhowmanytiers] = {
                 }
             }
             if(!running) break;
+        }
+
+        if(spaceheld && (nowms() - lastspacetime) > spacedebouncems){
+          spaceheld = 0;
         }
 
         time_t currenttime = time(NULL);
