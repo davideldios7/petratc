@@ -78,6 +78,9 @@ typedef struct{
     int howmanystat;  //how many times itc alls addstat() for that stat
 }prizes;  
 
+#define nhowmanytiers 11
+#define nhowmanyprizes 10
+
 static char *digit[] = {
     "", "K", "M", "B", "T",
     "Qa", "Qi", "Sx", "Sp", 
@@ -355,21 +358,27 @@ static void drawwin(WINDOW *win, bignum cheeses, ratworker workers[], int n){
 }
 
 #define shopwidth 45
-static void drawshop(WINDOW *win, ratworker workers[], int n, int selected, bignum cheeses){
+static void drawshop(WINDOW *win, ratworker workers[], int n, int selected, bignum cheeses, int active){
     int winh = getmaxy(win);
     int winw = getmaxx(win);
 
     int shoph = n + 2;
-    if(shoph > winh - 2) shoph = winh - 2; 
+    if(shoph > winh / 2) shoph = winh / 2;  
+    if(shoph > winh - 2) shoph = winh - 2;
     int shopw = shopwidth;
     if(shopw > winw - 4) shopw = winw - 4;
-    if(shoph < 3 || shopw < 10) return; 
+    if(shoph < 3 || shopw < 10) return;
     //if that skip it
 
     int shopy;
     if(getlayout(win) == layoutwide){
         shopy = 1;
-    }else shopy = winh - shoph - 1;
+    }else{
+        int pshoph = (nhowmanyprizes + 2);
+        if(pshoph > winh / 2) pshoph = winh / 2;
+        shopy = winh - shoph - pshoph - 1;
+        if(shopy < 1) shopy = 1;
+    }
 
     int shopx = winw - shopw - 2;
 
@@ -381,7 +390,10 @@ static void drawshop(WINDOW *win, ratworker workers[], int n, int selected, bign
     mvwaddch(win, shopy, shopx + shopw - 1, ACS_URCORNER);
     mvwaddch(win, shopy + shoph - 1, shopx, ACS_LLCORNER);
     mvwaddch(win, shopy + shoph - 1, shopx + shopw - 1, ACS_LRCORNER);
-    mvwprintw(win, shopy, shopx + 2, " shop (up/down, enter) ");
+
+    if(active) wattron(win, A_BOLD | A_REVERSE);
+    mvwprintw(win, shopy, shopx + 2, " workers (tab,up/down,enter) ");
+    if(active) wattroff(win, A_BOLD | A_REVERSE);
 
     int availw = shopw - 2;
     int visible = shoph - 2;
@@ -396,7 +408,8 @@ static void drawshop(WINDOW *win, ratworker workers[], int n, int selected, bign
         char *ownedstr = bignumprint(w->owned);
         char rightstr[32];
         snprintf(rightstr, sizeof(rightstr), "$%s x%s",
-            pricestr ? pricestr : "?", ownedstr ? ownedstr : "?");        if(pricestr) free(pricestr);
+            pricestr ? pricestr : "?", ownedstr ? ownedstr : "?");
+        if(pricestr) free(pricestr);
         if(ownedstr) free(ownedstr);
 
         int rightlen = strlen(rightstr);
@@ -408,14 +421,88 @@ static void drawshop(WINDOW *win, ratworker workers[], int n, int selected, bign
         snprintf(row, sizeof(row), "%-*.*s", availw, availw, "");
 
         int affordable = comparebignum(cheeses, w->price) >= 0;
-        if(i == selected) wattron(win, A_REVERSE);
+        if(active && i == selected) wattron(win, A_REVERSE);
         else if(!affordable) wattron(win, A_DIM);
 
         mvwprintw(win, shopy + 1 + (i - start), shopx + 1, "%s", row);
         mvwprintw(win, shopy + 1 + (i - start), shopx + 1, "%-*.*s", namewidth, namewidth, w->name);
         mvwprintw(win, shopy + 1 + (i - start), shopx + 1 + availw - rightlen, "%s", rightstr);
 
-        if(i == selected) wattroff(win, A_REVERSE);
+        if(active && i == selected) wattroff(win, A_REVERSE);
+        else if(!affordable) wattroff(win, A_DIM);
+    }//bwehghg
+}
+
+#define pshopwidth 45
+static void drawpshop(WINDOW *win, prizes prize[], int n, int selected, bignum cheeses, int active){
+    int winh = getmaxy(win);
+    int winw = getmaxx(win);
+
+    int shoph = n + 2;
+    if(shoph > winh / 2) shoph = winh / 2;
+    if(shoph > winh - 2) shoph = winh - 2;
+    int shopw = pshopwidth;
+    if(shopw > winw - 4) shopw = winw - 4;
+    if(shoph < 3 || shopw < 10) return;
+    //if that skip it
+
+    int shopx = winw - shopw - 2;  
+    int shopy;
+    if(getlayout(win) == layoutwide){
+        int wshoph = nhowmanytiers + 2;
+        if(wshoph > winh / 2) wshoph = winh / 2;
+        shopy = 1 + wshoph;
+        if(shopy + shoph > winh - 1) shopy = winh - shoph - 1;
+    } else {
+        shopy = winh - shoph - 1;
+        if(shopy < 1) shopy = 1;
+    }
+
+    mvwhline(win, shopy, shopx + 1, 0, shopw - 2);
+    mvwhline(win, shopy + shoph - 1, shopx + 1, 0, shopw - 2);
+    mvwvline(win, shopy + 1, shopx, 0, shoph - 2);
+    mvwvline(win, shopy + 1, shopx + shopw - 1, 0, shoph - 2);
+    mvwaddch(win, shopy, shopx, ACS_ULCORNER);
+    mvwaddch(win, shopy, shopx + shopw - 1, ACS_URCORNER);
+    mvwaddch(win, shopy + shoph - 1, shopx, ACS_LLCORNER);
+    mvwaddch(win, shopy + shoph - 1, shopx + shopw - 1, ACS_LRCORNER);
+
+    if(active) wattron(win, A_BOLD | A_REVERSE);
+    mvwprintw(win, shopy, shopx + 2, " prizes (tab/up/down/enter) ");
+    if(active) wattroff(win, A_BOLD | A_REVERSE);
+
+    int availw = shopw - 2;
+    int visible = shoph - 2;
+    int start = 0;
+    if(selected >= visible) start = selected - visible + 1;
+    if(start > n - visible) start = n - visible;
+    if(start < 0) start = 0;
+
+    for(int i = start; i < start + visible && i < n; i++){
+        prizes *p = &prize[i];
+        char *pricestr = bignumprint(p->price);
+        char rightstr[32];
+        snprintf(rightstr, sizeof(rightstr), "$%s",
+            pricestr ? pricestr : "?");
+        if(pricestr) free(pricestr);
+
+        int rightlen = strlen(rightstr);
+        int namewidth = availw - rightlen - 1; //-1 for a gap column
+        if(namewidth < 0) namewidth = 0;
+
+        char row[64];
+        //fill the whole width first so shrinking a wider row doesn't leave weird gaps
+        snprintf(row, sizeof(row), "%-*.*s", availw, availw, "");
+
+        int affordable = comparebignum(cheeses, p->price) >= 0;
+        if(active && i == selected) wattron(win, A_REVERSE);
+        else if(!affordable) wattron(win, A_DIM);
+
+        mvwprintw(win, shopy + 1 + (i - start), shopx + 1, "%s", row);
+        mvwprintw(win, shopy + 1 + (i - start), shopx + 1, "%-*.*s", namewidth, namewidth, p->name);
+        mvwprintw(win, shopy + 1 + (i - start), shopx + 1 + availw - rightlen, "%s", rightstr);
+
+        if(active && i == selected) wattroff(win, A_REVERSE);
         else if(!affordable) wattroff(win, A_DIM);
     }//bwehghg
 }
@@ -431,7 +518,7 @@ static void drawshop(WINDOW *win, ratworker workers[], int n, int selected, bign
 #endif
 
 
-static void clickersave(bignum cheeses, ratworker workers[], int n){
+static void clickersave(bignum cheeses, ratworker workers[], int n, prizes prize[], int n2){
     char path[256];
     snprintf(path, sizeof(path), clickerpath, getenv("HOME"));
     mkdir(path, 0755);
@@ -444,10 +531,13 @@ static void clickersave(bignum cheeses, ratworker workers[], int n){
             workers[i].price.x, workers[i].price.y,
             workers[i].owned.x, workers[i].owned.y);
     }
+    for(int i = 0; i < n2; i++){
+        fprintf(f, "%lf\n%d\n", prize[i].price.x, prize[i].price.y);
+    }
     fclose(f);
 }
 
-static void clickerload(bignum *cheeses, ratworker workers[], int n){
+static void clickerload(bignum *cheeses, ratworker workers[], int n, prizes prize[], int n2){
     char path[256];
     snprintf(path, sizeof(path), clickersavepath, getenv("HOME"));
 
@@ -467,6 +557,11 @@ static void clickerload(bignum *cheeses, ratworker workers[], int n){
             break;
         }
     }
+    for(int i = 0; i < n2; i++){
+        if(fscanf(f, "%lf\n%d\n", &prize[i].price.x, &prize[i].price.y) != 2){
+            break;
+        }
+    }
     fclose(f);
 }
 //i should make a version of this that just saves a big string 
@@ -479,9 +574,13 @@ static void clickerload(bignum *cheeses, ratworker workers[], int n){
 
 
 
-static void draweverything(WINDOW *win, bignum cheeses, ratworker workers[], int n, int selected){
+typedef enum { SHOP_WORKERS, SHOP_PRIZES } shopmode;
+
+static void draweverything(WINDOW *win, bignum cheeses, ratworker workers[], prizes prize[], int n, int n2,
+                           int currentworker, int currentprize, shopmode active){
     drawwin(win, cheeses, workers, n);
-    drawshop(win, workers, n, selected, cheeses);
+    drawshop(win, workers, n, currentworker, cheeses, active == SHOP_WORKERS);
+    drawpshop(win, prize, n2, currentprize, cheeses, active == SHOP_PRIZES);
     wrefresh(win);
 }
 
@@ -506,9 +605,10 @@ void gameclicker(){
 
     bignum cheeses = {0.0, 0};
     bignum onecheese = {1.0, 0}; //what a single click is worth
-    int selected = 0;
+    int currentworker = 0;
+    int currentprize = 0;
+    shopmode activeshop = SHOP_WORKERS;
 
-#define nhowmanytiers 11
 static ratworker workers[nhowmanytiers] = {
     //name,                      bignum price,clicks/tick,multiplier,owned (howmanyowned)
     { "small rat",                 {10.0, 0},  {1.0, 0},   {1.15, 0},  {0.0, 0} },
@@ -524,7 +624,6 @@ static ratworker workers[nhowmanytiers] = {
     { "the cheese singularity",    {120.0, 1}, {250.0, 0}, {1.10, 0},  {0.0, 0} },
 };
 
-#define nhowmanyprizes 10
 static prizes prize[nhowmanyprizes] = {
     {"solid cheese",       {100.0, 0}, {1.15, 0}, "hunger", 2},
     {"cheese mountain",   {5000.0, 0}, {1.15, 0}, "hunger", 8},
@@ -534,15 +633,14 @@ static prizes prize[nhowmanyprizes] = {
     {"love cheese cake", {15000.0, 0}, {1.15, 0}, "love",   7},
     {"squeaky cheese",     {300.0, 0}, {1.15, 0}, "fun",    2},
     {"party cheese",     {12000.0, 0}, {1.15, 0}, "fun",    6},
-    {"soap cheese",        {400.0, 0}, {1.15, 0}, "clean",  2},
-    {"bubble cheese",     {9000.0, 0}, {1.15, 0}, "clean",  5}    
+    {"cheese soap",        {400.0, 0}, {1.15, 0}, "clean",  2},
+    {"cheese bubbles",     {9000.0, 0}, {1.15, 0}, "clean",  5}    
 }; 
 
-
     
-    clickerload(&cheeses, workers, nhowmanytiers); 
+    clickerload(&cheeses, workers, nhowmanytiers, prize, nhowmanyprizes); 
     
-    draweverything(win, cheeses, workers, nhowmanytiers, selected); 
+    draweverything(win, cheeses, workers, prize, nhowmanytiers, nhowmanyprizes, currentworker, currentprize, activeshop);
     
     time_t lasttime = time(NULL);
     static int spaceheld = 0;
@@ -550,23 +648,41 @@ static prizes prize[nhowmanyprizes] = {
     while(running){
 
         int ch;
-        while((ch = getch()) != ERR){ //drain the whole queue each frame so rapid clicks/keys aren't ignroed 
+        while((ch = getch()) != ERR){ //drain the whole queue each frame so rapid clicks/keys aren't ignored 
             switch (ch) {
                 case 'q': case 'Q': running = 0; break;
-                case KEY_UP: if(selected > 0) selected--; break;
-                case KEY_DOWN: if(selected < nhowmanytiers - 1) selected++; break;
+                case '\t':
+                    activeshop = (activeshop == SHOP_WORKERS) ? SHOP_PRIZES : SHOP_WORKERS;
+                    break;
+                case KEY_UP:
+                    if(activeshop == SHOP_WORKERS){
+                        if(currentworker > 0) currentworker--;
+                    } else {
+                        if(currentprize > 0) currentprize--;
+                    }
+                    break;
+                case KEY_DOWN:
+                    if(activeshop == SHOP_WORKERS){
+                        if(currentworker < nhowmanytiers - 1) currentworker++;
+                    } else {
+                        if(currentprize < nhowmanyprizes - 1) currentprize++;
+                    }
+                    break;
                 case '\n': case KEY_ENTER:
-                    buyworker(&cheeses, &workers[selected]);
+                    if(activeshop == SHOP_WORKERS)
+                        buyworker(&cheeses, &workers[currentworker]);
+                    else
+                        buyprize(&cheeses, &prize[currentprize]);
                     break;
                 case ' ': {
                     long now = nowms();
                     if(!spaceheld){
-                    cheeses = addbignum(cheeses, onecheese); 
-                    spaceheld = 1;
-                        } 
+                        cheeses = addbignum(cheeses, onecheese); 
+                        spaceheld = 1;
+                    } 
                     lastspacetime = now;
                     break;
-                    } 
+                } 
                 case KEY_MOUSE: {
                     MEVENT event;
                     if(getmouse(&event) == OK && (event.bstate & BUTTON1_PRESSED)){
@@ -596,10 +712,10 @@ static prizes prize[nhowmanyprizes] = {
             lasttime = currenttime;  
         }
 
-        if(running) draweverything(win, cheeses, workers, nhowmanytiers, selected);
+        if(running) draweverything(win, cheeses, workers, prize, nhowmanytiers, nhowmanyprizes, currentworker, currentprize, activeshop);
 
         usleep(16667); //60 fps according to google ai overview lmao
     }
-clickersave(cheeses, workers, nhowmanytiers);
+clickersave(cheeses, workers, nhowmanytiers, prize, nhowmanyprizes);
 stop();
 }
