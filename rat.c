@@ -79,12 +79,33 @@ void setstat(){
     rat.age = timenow;
 }
 
+#define minlines 25
+#define mincols 80
+
+static void checkminsize(void){
+    if(LINES >= minlines && COLS >= mincols) return;
+
+    clear();
+    mvprintw(0, 0, "terminal too small! need at least %dx%d, got %dx%d.", mincols, minlines, COLS, LINES);
+    mvprintw(1, 0, "press any key to exit...");
+    refresh();
+
+    nodelay(stdscr, FALSE);
+    getch();
+
+    save();
+    endwin();
+    exit(1);
+}
+
 WINDOW *ratdrawbox(void){
 
     static int initialized = 0;
     if(!initialized){ initscr(); }else{ refresh(); }
     ++initialized;
 
+    checkminsize();
+    
     noecho();
     cbreak();
     nodelay(stdscr, TRUE);

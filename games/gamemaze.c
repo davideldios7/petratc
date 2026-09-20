@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
@@ -93,26 +92,29 @@ void lerw() {
         int pl = 1;
         int cx = sx, cy = sy;
  
-        while (!vis[cy * cw + cx]) {
+        while (!vis[cy * cw + cx]) { 
             int dir = rand() % 4;
             int nx = cx + ddx[dir];
             int ny = cy + ddy[dir];
             if (nx < 0 || nx >= cw || ny < 0 || ny >= ch) continue;
- 
+
             int ni = ny * cw + nx;
+            if (vis[ni]) {
+                cx = nx; cy = ny;
+                continue;
+            }
             if (ip[ni] >= 0) {
                 int idx = ip[ni];
-                for (int i = idx + 1; i < pl; i++)
-                    ip[py[i] * cw + px[i]] = -1;
+                for (int i = idx + 1; i < pl; i++) ip[py[i] * cw + px[i]] = -1; 
                 pl = idx + 1;
-                cx = nx; cy = ny;
-            } else {
-                px[pl] = nx; py[pl] = ny;
+                cx = nx; cy = ny; 
+            } else { 
+                px[pl] = nx; py[pl] = ny; 
                 ip[ni] = pl++;
-                cx = nx; cy = ny;
+                cx = nx; cy = ny; 
             }
         }
-
+ 
         //each cell as 2x2
         for (int i = 0; i < pl; i++) {
             int gx = 3*px[i]+1, gy = 3*py[i]+1;
@@ -306,15 +308,14 @@ void gamemaze(){
         mvwprintw(win, 1, width/3+2, "move around the maze and find food!"); 
         mvwprintw(win, 2, width/3+2, "you've collected %d/5 cheeses", found); 
         mvwprintw(win, 3, width/3+2, "(only if you find food your rat will be less hungry)"); 
-        mvwprintw(win, height/1.5-2+1, width/3+2, "btw sometimes the maze is impossible just press R");
-        mvwprintw(win, height/1.5-1+1, width/3+2, "if that's the case");
 
-        for (int y = 0; y < H; y++)
-        for (int x = 0; x < W; x++){
-        if (grid[y][x] == '#') mvwaddch(win, y+1, x+1, '#');
-        else if (grid[y][x] == 'O') {
-            int dist = abs(y - curs.posy) + abs(x - curs.posx);
-            if (dist <= 5) mvwaddch(win, y+1, x+1, 'O');
+        for (int y = 0; y < H; y++){
+            for (int x = 0; x < W; x++){
+                if (grid[y][x] == '#') mvwaddch(win, y+1, x+1, '#');
+                else if (grid[y][x] == 'O') {
+                int dist = abs(y - curs.posy) + abs(x - curs.posx);
+                if (dist <= 5) mvwaddch(win, y+1, x+1, 'O');
+                }
             }
         }
 
@@ -330,9 +331,11 @@ void gamemaze(){
         usleep(50000);
     }
 
-    for (int y = 0; y < H; y++)
-    free(grid[y]);
+    for (int y = 0; y < H; y++){
+        free(grid[y]);
+    } 
     free(grid);
+    //those two for loops were giving me warnings on my lsp so i just fixed them 
 
 stop(); 
 }
